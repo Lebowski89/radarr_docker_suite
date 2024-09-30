@@ -1,0 +1,82 @@
+---
+
+################################
+# API
+################################
+
+radarr_api_key: []
+
+################################
+# BASICS
+################################
+
+radarr_basics_name: 'radarr'
+radarr_basics_image_repo: 'ghcr.io/hotio/radarr'
+radarr_basics_image_tag: 'nightly'
+radarr_basics_restart_policy: 'unless-stopped'
+
+################################
+# NETWORK
+################################
+
+radarr_network_backend: 'proxy'  ## allows backend docker communication between radarr and companion apps, such as recyclarr
+radarr_network_backend_driver: []  ## only required if network doesn't exist
+radarr_network_backend_subnet: []  ## only required if network doesn't exist
+
+################################
+# ENV
+################################
+
+radarr_env_timezone: []
+radarr_env_puid: []
+radarr_env_pgid: []
+
+################################
+# PORTS
+################################
+
+radarr_ports_host: '7878'
+radarr_ports_cont: '7878'
+
+################################
+# PATHS
+################################
+
+radarr_paths_folder: '{{ radarr_basics_name }}'
+radarr_paths_location: '/opt/{{ radarr_paths_folder }}'
+
+################################
+# BINDS
+################################
+
+radarr_volumes_binds_default:
+  - /etc/localtime:/etc/localtime:ro
+  - '{{ radarr_paths_location }}:/config'
+
+################################
+# AUTHELIA
+################################
+
+radarr_authelia_name: 'authelia'
+
+################################
+# TRAEFIK
+################################
+
+radarr_traefik_subdomain: '{{ radarr_basics_name }}'
+radarr_traefik_domain: []
+radarr_traefik_port: '7878'
+radarr_traefik_themepark_theme: 'hotline'  ## See https://github.com/themepark-dev/theme.park
+
+  ## traefik docker network
+radarr_traefik_network: 'traefik_proxy'
+radarr_traefik_network_driver: []  ## only required if network doesn't exist
+radarr_traefik_network_subnet: []  ## only required if network doesn't exist
+
+################################
+# CLOUDFLARE
+################################
+
+radarr_cloudflare_record_type: 'A'  ## A (IPV4), AAAA (IPV6), CNAME, etc
+radarr_cloudflare_proxy: 'true'  ## true for cloudflare DNS SSL
+radarr_cloudflare_api_token: []

@@ -1,0 +1,291 @@
+---
+
+################################
+# DEPENDENCIES
+################################
+
+- name: Install prerequisite apt packages
+  ansible.builtin.apt:
+    pkg:
+      - python3-requests
+      - python3-psycopg2
+      - python3-lxml
+    update_cache: true
+
+- name: Install collection requirements
+  community.general.ansible_galaxy_install:
+    type: collection
+    requirements_file: '{{ role_path }}/requirements.yml'
+
+################################
+# DOCKER
+################################
+
+- name: Apt install docker if required
+  when: ansible_os_family == 'Debian'
+  block:
+    - name: Gather apt facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Include docker install tasks
+      when: '"docker-ce" not in ansible_facts.packages'
+      ansible.builtin.include_tasks: 'sub_tasks/docker.yml'
+
+################################
+# CLEAN UP
+################################
+
+- name: Register radarr container
+  community.docker.docker_container_info:
+    name: '{{ radarr_basics_name }}'
+  register: radarr_existing_container_result
+
+- name: Remove existing radarr container
+  when: radarr_existing_container_result.exists
+  community.docker.docker_container:
+    container_default_behavior: compatibility
+    name: '{{ radarr_basics_name }}'
+    state: absent
+    stop_timeout: 10
+  register: remove_radarr_docker
+  retries: 5
+  delay: 10
+  until: remove_radarr_docker is succeeded
+
+################################
+# BACKEND NETWORK
+################################
+
+- name: Conduct backend network tasks
+  when: radarr_network_backend_is_enabled
+  block:
+    - name: Register radarr backend network
+      community.docker.docker_network_info:
+        name: '{{ radarr_network_backend }}'
+      register: radarr_net_backend_result
+
+    - name: Radarr network backend builtin fail
+      ansible.builtin.fail:
+        msg: radarr backend network does not exist nor is it enabled. Ensure the radarr backend network variables contain valid entries.
+      when:
+        - not radarr_net_backend_result.exists
+        - not radarr_network_backend_is_enabled
+
+    - name: Create radarr backend network
+      when:
+        - not radarr_net_backend_result.exists
+        - radarr_network_backend_is_enabled
+      community.docker.docker_network:
+        name: '{{ radarr_network_backend }}'
+        driver: '{{ radarr_network_backend_driver }}'
+        ipam_config:
+          - subnet: '{{ radarr_network_backend_subnet }}'
+
+################################
+# APPDATA
+################################
+
+- name: Create radarr appdata directory
+  ansible.builtin.file:
+    path: '{{ radarr_paths_location }}'
+    state: directory
+    owner: '{{ radarr_env_puid }}'
+    group: '{{ radarr_env_pgid }}'
+    mode: '0755'
+
+################################
+# CONFIG
+################################
+
+- name: Check if radarr config.xml exists
+  ansible.builtin.stat:
+    path: '{{ radarr_paths_location }}/config.xml'
+  register: radarr_config_xml
+
+- name: Create radarr config.xml file
+  when: not radarr_config_xml.stat.exists
+  block:
+    - name: Import config file
+      ansible.builtin.template:
+        src: '{{ role_path }}/templates/config.xml.j2'
+        dest: '{{ radarr_paths_location }}/config.xml'
+        force: true
+        owner: '{{ radarr_env_puid }}'
+        group: '{{ radarr_env_pgid }}'
+        mode: '0664'
+
+    - name: Wait for 'config.xml' to be created
+      ansible.builtin.wait_for:
+        path: '{{ radarr_paths_location }}/config.xml'
+        state: present
+
+    - name: Radarr config.xml | Lookup Apikey value
+      when: radarr_api_key_is_enabled
+      community.general.xml:
+        path: '{{ radarr_paths_location }}/config.xml'
+        xpath: "/Config/ApiKey"
+        content: "text"
+      register: xml_radarr_api
+
+    - name: Radarr config.xml | insert existing api key
+      when:
+        - radarr_api_key_is_enabled
+        - ((xml_radarr_api.matches[0].ApiKey is defined) and (xml_radarr_api.matches[0].ApiKey != radarr_api_key))
+      community.general.xml:
+        path: '{{ radarr_paths_location }}/config.xml'
+        xpath: '/Config/ApiKey'
+        value: '{{ radarr_api_key }}'
+
+    - name: Radarr config.xml | Lookup AuthenticationMethod value
+      when: radarr_authelia_is_enabled
+      community.general.xml:
+        path: '{{ radarr_paths_location }}/config.xml'
+        xpath: "/Config/AuthenticationMethod"
+        content: "text"
+      register: xml_radarr_external
+
+    - name: Register authelia container
+      when: radarr_authelia_is_enabled
+      community.docker.docker_container_info:
+        name: '{{ radarr_authelia_name }}'
+      register: radarr_authelia_container_result
+
+    - name: Radarr config.xml | change auth method to external  ## prevents double login when using authelia
+      when:
+        - radarr_authelia_is_enabled
+        - radarr_authelia_container_result.exists
+        - ((xml_radarr_external.matches[0].AuthenticationMethod is defined) and (xml_radarr_external.matches[0].AuthenticationMethod != 'External'))
+      community.general.xml:
+        path: '{{ radarr_paths_location }}/config.xml'
+        xpath: '/Config/AuthenticationMethod'
+        value: 'External'
+
+################################
+# POSTGRES
+################################
+
+- name: Include postgres container tasks
+  when: radarr_postgres_is_enabled
+  ansible.builtin.include_tasks: 'postgres/postgres_container.yml'
+
+- name: Include postgres database tasks
+  when: radarr_postgres_is_enabled
+  ansible.builtin.include_tasks: 'postgres/postgres_database.yml'
+
+- name: Include postgres radarr config.xml tasks
+  when: radarr_postgres_is_enabled
+  ansible.builtin.include_tasks: 'postgres/postgres_config_xml.yml'
+
+################################
+# TRAEFIK
+################################
+
+- name: Conduct traefik tasks
+  when: radarr_traefik_is_enabled
+  block:
+    - name: Register traefik network
+      community.docker.docker_network_info:
+        name: '{{ radarr_traefik_network }}'
+      register: radarr_traefik_network_result
+
+    - name: Traefik builtin fail
+      when:
+        - not radarr_traefik_network_is_enabled
+        - not radarr_traefik_network_result.exists
+      ansible.builtin.fail:
+        msg: Traefik network does not exist nor is it enabled. Ensure the Traefik network variables contain valid entries.
+
+    - name: Create traefik network
+      when: not radarr_traefik_network_result.exists
+      community.docker.docker_network:
+        name: '{{ radarr_traefik_network }}'
+        driver: '{{ radarr_traefik_network_driver }}'
+        ipam_config:
+          - subnet: '{{ radarr_traefik_network_subnet }}'
+
+################################
+# CLOUDFLARE
+################################
+
+- name: Include cloudflare tasks
+  when: radarr_cloudflare_is_enabled
+  ansible.builtin.include_tasks: 'sub_tasks/cloudflare.yml'
+
+################################
+# NFS
+################################
+
+- name: Include nfs tasks
+  ansible.builtin.include_tasks: 'sub_tasks/nfs.yml'
+
+################################
+# RCLONE
+################################
+
+- name: Include rclone tasks
+  when: radarr_rclone_qbittorrent_is_enabled
+  ansible.builtin.include_tasks: 'sub_tasks/rclone.yml'
+
+################################
+# METRICS
+################################
+
+- name: Include prometheus container tasks
+  when: radarr_prometheus_is_enabled
+  ansible.builtin.include_tasks: 'prometheus/prometheus_container.yml'
+
+- name: Include prometheus exporter tasks
+  when:
+    - radarr_prometheus_is_enabled
+    - radarr_prometheus_exporter_is_enabled
+  ansible.builtin.include_tasks: 'prometheus/prometheus_exporter.yml'
+
+- name: Include prometheus cloudflare tasks
+  when: radarr_prometheus_is_enabled
+  ansible.builtin.include_tasks: 'prometheus/prometheus_cloudflare.yml'
+
+################################
+# CONTAINER
+################################
+
+- name: Create radarr container
+  when: not radarr_traefik_is_enabled
+  community.docker.docker_container:
+    name: '{{ radarr_basics_name }}'
+    image: '{{ radarr_basics_image_repo }}:{{ radarr_basics_image_tag }}'
+    networks: '{{ radarr_docker_networks }}'
+    env:
+      PUID: '{{ radarr_env_puid }}'
+      PGID: '{{ radarr_env_pgid }}'
+      TZ: '{{ radarr_env_timezone }}'
+    ports:
+      - '{{ radarr_ports_host }}:{{ radarr_ports_cont }}'
+    volumes: '{{ radarr_docker_volumes }}'
+#    healthcheck:
+    restart_policy: '{{ radarr_basics_restart_policy }}'
+
+- name: Create radarr traefik container
+  when: radarr_traefik_is_enabled
+  community.docker.docker_container:
+    name: '{{ radarr_basics_name }}'
+    image: '{{ radarr_basics_image_repo }}:{{ radarr_basics_image_tag }}'
+    networks: '{{ radarr_docker_networks }}'
+    env:
+      PUID: '{{ radarr_env_puid }}'
+      PGID: '{{ radarr_env_pgid }}'
+      TZ: '{{ radarr_env_timezone }}'
+    labels: '{{ radarr_traefik_labels }}'
+    ports:
+      - '{{ radarr_ports_host }}:{{ radarr_ports_cont }}'
+    volumes: '{{ radarr_docker_volumes }}'
+#    healthcheck:
+    restart_policy: '{{ radarr_basics_restart_policy }}'
+
+################################
+# RECYCLARR
+################################
+
+- name: Include recyclarr tasks
+  when: radarr_recyclarr_is_enabled
+  ansible.builtin.include_tasks: 'sub_tasks/recyclarr.yml'

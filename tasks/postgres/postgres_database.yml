@@ -1,0 +1,43 @@
+---
+
+- name: Check for existing postgres databases
+  block:
+    - name: Ping for existing main database
+      community.postgresql.postgresql_ping:
+        login_host: '{{ radarr_postgres_basics_host }}'
+        login_user: '{{ radarr_postgres_auth_user }}'
+        login_password: '{{ radarr_postgres_auth_password }}'
+        port: '{{ radarr_postgres_ports_host }}'
+        db: '{{ radarr_postgres_database_main }}'
+      register: radarr_postgres_maindb
+
+    - name: Ping for existing log database
+      community.postgresql.postgresql_ping:
+        login_host: '{{ radarr_postgres_basics_host }}'
+        login_user: '{{ radarr_postgres_auth_user }}'
+        login_password: '{{ radarr_postgres_auth_password }}'
+        port: '{{ radarr_postgres_ports_host }}'
+        db: '{{ radarr_postgres_database_log }}'
+      register: radarr_postgres_logdb
+
+- name: Create postgres databases
+  block:
+    - name: Create postgres main database
+      when: not radarr_postgres_maindb == true
+      community.postgresql.postgresql_db:
+        login_host: '{{ radarr_postgres_basics_host }}'
+        login_user: '{{ radarr_postgres_auth_user }}'
+        login_password: '{{ radarr_postgres_auth_password }}'
+        port: '{{ radarr_postgres_ports_host }}'
+        name: '{{ radarr_postgres_database_main }}'
+        state: 'present'
+
+    - name: Create postgres log database
+      when: not radarr_postgres_logdb == true
+      community.postgresql.postgresql_db:
+        login_host: '{{ radarr_postgres_basics_host }}'
+        login_user: '{{ radarr_postgres_auth_user }}'
+        login_password: '{{ radarr_postgres_auth_password }}'
+        port: '{{ radarr_postgres_ports_host }}'
+        name: '{{ radarr_postgres_database_log }}'
+        state: 'present'

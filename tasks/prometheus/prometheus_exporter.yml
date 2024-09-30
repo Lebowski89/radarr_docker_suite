@@ -1,0 +1,33 @@
+---
+
+- name: Apply radarr-exporter prometheus scrape config
+  ansible.builtin.blockinfile:
+    path: '{{ radarr_prometheus_paths_location }}/prometheus.yml'
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - radarr-EXPORTER #"
+    block: |
+      {% filter indent(width=2, first=true) %}
+      - job_name: '{{ radarr_prometheus_exporter_name }}'
+        scrape_interval: 1m
+        static_configs:
+          - targets: ['{{ radarr_prometheus_exporter_name }}:{{ radarr_prometheus_exporter_cont_port }}']
+      {% endfilter %}
+  notify:
+    - restart prometheus
+
+- name: Create radarr prometheus exporter container
+  community.docker.docker_container:
+    name: '{{ radarr_prometheus_exporter_name }}'
+    image: '{{ radarr_prometheus_exporter_image_repo }}:{{ radarr_prometheus_exporter_image_tag }}'
+    command: ["radarr"]
+    networks: '{{ radarr_prometheus_exporter_networks }}'
+    env:
+      PUID: '{{ radarr_prometheus_exporter_env_puid }}'
+      PGID: '{{ radarr_prometheus_exporter_env_pgid }}'
+      TZ: '{{ radarr_prometheus_exporter_env_timezone }}'
+      PORT: '{{ radarr_prometheus_exporter_cont_port }}'
+      URL: 'http://{{ radarr_basics_name }}:{{ radarr_ports_cont }}'
+      API_KEY: '{{ radarr_api_key }}'
+      ENABLE_ADDITIONAL_METRICS: 'true'
+    ports:
+      - '{{ radarr_prometheus_exporter_host_port }}:{{ radarr_prometheus_exporter_cont_port }}'
+    restart_policy: '{{ radarr_prometheus_exporter_restart_policy }}'

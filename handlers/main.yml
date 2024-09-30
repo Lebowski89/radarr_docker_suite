@@ -1,0 +1,43 @@
+---
+
+- name: Stop autofs service
+  ansible.builtin.service:
+    name: autofs
+    state: stopped
+  listen: redo mounts
+
+- name: Unmount autofs mounts
+  ansible.builtin.command: umount -a -t autofs
+  listen: redo mounts
+
+- name: Start autofs service
+  ansible.builtin.service:
+    name: autofs
+    state: started
+  listen: redo mounts
+
+- name: Restart prometheus container
+  community.docker.docker_container:
+    container_default_behavior: compatibility
+    name: '{{ radarr_prometheus_basics_name }}'
+    state: started
+    restart: true
+    stop_timeout: 10
+  register: restart_radarr_prometheus_docker
+  retries: 5
+  delay: 10
+  until: restart_radarr_prometheus_docker is succeeded
+  listen: restart prometheus
+
+- name: Restart recyclarr container
+  community.docker.docker_container:
+    container_default_behavior: compatibility
+    name: '{{ radarr_recyclarr_basics_name }}'
+    state: started
+    restart: true
+    stop_timeout: 10
+  register: restart_radarr_recyclarr_docker
+  retries: 5
+  delay: 10
+  until: restart_radarr_recyclarr_docker is succeeded
+  listen: restart recyclarr

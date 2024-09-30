@@ -1,0 +1,32 @@
+---
+
+radarr_recyclarr_is_enabled: '{{ (radarr_recyclarr_basics_name is defined) and
+                                 (radarr_recyclarr_basics_name is not none) and
+                                 (radarr_recyclarr_basics_name | trim | length > 0) and
+                                 (radarr_recyclarr_basics_image_repo is defined) and
+                                 (radarr_recyclarr_basics_image_repo is not none) and
+                                 (radarr_recyclarr_basics_image_repo | trim | length > 0) and
+                                 (radarr_recyclarr_basics_image_tag is defined) and
+                                 (radarr_recyclarr_basics_image_tag is not none) and
+                                 (radarr_recyclarr_basics_image_tag | trim | length > 0) and
+                                 (radarr_recyclarr_basics_restart_policy is defined) and
+                                 (radarr_recyclarr_basics_restart_policy is not none) and
+                                 (radarr_recyclarr_basics_restart_policy | trim | length > 0) and
+                                 (radarr_recyclarr_env_timezone is defined) and
+                                 (radarr_recyclarr_env_timezone is not none) and
+                                 (radarr_recyclarr_env_timezone | trim | length > 0) and
+                                 (radarr_recyclarr_env_puid is defined) and
+                                 (radarr_recyclarr_env_puid is not none) and
+                                 (radarr_recyclarr_env_puid | trim | length > 0) and
+                                 (radarr_recyclarr_env_pgid is defined) and
+                                 (radarr_recyclarr_env_pgid is not none) and
+                                 (radarr_recyclarr_env_pgid | trim | length > 0) and
+                                 (radarr_recyclarr_paths_folder is defined) and
+                                 (radarr_recyclarr_paths_folder is not none) and
+                                 (radarr_recyclarr_paths_folder | trim | length > 0) and
+                                 (radarr_recyclarr_paths_location is defined) and
+                                 (radarr_recyclarr_paths_location is not none) and
+                                 (radarr_recyclarr_paths_location | trim | length > 0) and
+                                 (radarr_recyclarr_bind_mount is defined) and
+                                 (radarr_recyclarr_bind_mount is not none) and
+                                 (radarr_recyclarr_bind_mount | trim | length > 0) }}'

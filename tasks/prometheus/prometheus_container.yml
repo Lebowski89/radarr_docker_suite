@@ -1,0 +1,76 @@
+---
+
+- name: Create prometheus appdata directory
+  ansible.builtin.file:
+    path: '{{ radarr_prometheus_paths_location }}'
+    state: directory
+    owner: '{{ radarr_prometheus_env_puid }}'
+    group: '{{ radarr_prometheus_env_pgid }}'
+    mode: '0755'
+
+- name: Create prometheus metrics data directory
+  ansible.builtin.file:
+    path: '{{ radarr_prometheus_paths_data_location }}'
+    state: directory
+    owner: '{{ radarr_prometheus_env_puid }}'
+    group: '{{ radarr_prometheus_env_pgid }}'
+    mode: '0755'
+
+- name: Check if prometheus scrape config exists
+  ansible.builtin.stat:
+    path: '{{ radarr_prometheus_paths_location }}/prometheus.yml'
+  register: radarr_prometheus_scrape_config
+
+- name: Import prometheus scrape file
+  when: not radarr_prometheus_scrape_config.stat.exists
+  ansible.builtin.template:
+    src: '{{ role_path }}/templates/prometheus.yml.j2'
+    dest: '{{ radarr_prometheus_paths_location }}/prometheus.yml'
+    force: true
+    owner: '{{ radarr_prometheus_env_puid }}'
+    group: '{{ radarr_prometheus_env_pgid }}'
+    mode: '0664'
+  notify:
+    - restart prometheus
+
+- name: Register prometheus network
+  community.docker.docker_network_info:
+    name: '{{ radarr_prometheus_network }}'
+  register: radarr_prometheus_network_result
+
+- name: Prometheus network builtin fail
+  ansible.builtin.fail:
+    msg: Prometheus network does not exist nor is it enabled. Ensure the Prometheus network variables contain valid entries.
+  when:
+    - not radarr_prometheus_network_is_enabled
+    - not radarr_prometheus_network_result.exists
+
+- name: Create prometheus network
+  when: not radarr_prometheus_network_result.exists
+  community.docker.docker_network:
+    name: '{{ radarr_prometheus_network }}'
+    driver: '{{ radarr_prometheus_network_driver }}'
+    ipam_config:
+      - subnet: '{{ radarr_prometheus_network_subnet }}'
+
+- name: Register prometheus container
+  community.docker.docker_container_info:
+    name: '{{ radarr_prometheus_basics_name }}'
+  register: radarr_prometheus_container_result
+
+- name: Create prometheus container
+  when: not radarr_prometheus_container_result.exists
+  community.docker.docker_container:
+    name: '{{ radarr_prometheus_basics_name }}'
+    image: '{{ radarr_prometheus_basics_image_repo }}:{{ radarr_prometheus_basics_image_tag }}'
+    networks: '{{ radarr_prometheus_docker_networks }}'
+    command: '{{ radarr_prometheus_commands | reject("equalto", omit) | list }}'
+    env:
+      PUID: '{{ radarr_prometheus_env_puid }}'
+      PGID: '{{ radarr_prometheus_env_pgid }}'
+      TZ: '{{ radarr_prometheus_env_timezone }}'
+    labels: '{{ radarr_prometheus_traefik_labels }}'
+    ports:
+      - '{{ radarr_prometheus_ports_host }}:{{ radarr_prometheus_ports_cont }}'
+    volumes: '{{ radarr_prometheus_volumes_binds }}'
+    restart_policy: '{{ radarr_prometheus_basics_restart_policy }}'
