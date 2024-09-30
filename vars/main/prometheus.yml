@@ -79,7 +79,7 @@ radarr_prometheus_network_default_bind:
 radarr_prometheus_network_traefik_bind:
   - name: '{{ radarr_prometheus_traefik_network }}'
 radarr_prometheus_network_bind:
-  - name: '{{radarr_prometheus_network }}'
+  - name: '{{ radarr_prometheus_network }}'
 
 radarr_prometheus_docker_networks: '{{ radarr_prometheus_network_default_bind
                                        + (radarr_prometheus_network_traefik_bind
@@ -182,11 +182,10 @@ radarr_prometheus_exporter_is_enabled: '{{ (radarr_prometheus_exporter_name is d
 radarr_prometheus_exporter_network_default_bind:
   - name: '{{ radarr_network_backend }}'
 radarr_prometheus_exporter_network_bind:
-  - name: '{{radarr_prometheus_network }}'
+  - name: '{{ radarr_prometheus_network }}'
 
 radarr_prometheus_exporter_networks: '{{ radarr_prometheus_exporter_network_default_bind
                                          + (radarr_prometheus_exporter_network_bind
                                             if radarr_prometheus_is_enabled
                                             else []) }}'
-
 
