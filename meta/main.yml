@@ -2,8 +2,6 @@ galaxy_info:
   author: Lebowski89
   description: An Ansible role to automate the full set-up of Radarr (Docker) - a movie collection manager for Usenet and BitTorrent users.
 
-  company: N/A
-
   license: MIT
 
   min_ansible_version: 2.1
@@ -20,5 +18,3 @@ galaxy_info:
     - usenet
     - torrent
     - bittorrent
-
-dependencies: Included in role
