@@ -7,11 +7,16 @@ galaxy_info:
   min_ansible_version: 2.1
 
   platforms:
-    - name: Debian-based
+    - name: Debian
 
   galaxy_tags:
-    - Radarr
+    - radarr
+    - docker
     - servarr
+    - prometheus
+    - metrics
+    - cloudflare
+    - traefik
     - pvr
     - movies
     - media
