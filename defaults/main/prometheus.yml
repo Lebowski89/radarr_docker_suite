@@ -14,16 +14,16 @@ radarr_prometheus_basics_restart_policy: 'unless-stopped'
 ################################
 
 radarr_prometheus_network: 'prometheus'
-radarr_prometheus_network_driver: []
-radarr_prometheus_network_subnet: []
+radarr_prometheus_network_driver: ''
+radarr_prometheus_network_subnet: ''
 
 ################################
 # ENV
 ################################
 
-radarr_prometheus_env_timezone: []
-radarr_prometheus_env_puid: []
-radarr_prometheus_env_pgid: []
+radarr_prometheus_env_timezone: ''
+radarr_prometheus_env_puid: ''
+radarr_prometheus_env_pgid: ''
 
 ################################
 # PORTS
@@ -56,7 +56,7 @@ radarr_prometheus_binds_data_mapping:
 ################################
   
 radarr_prometheus_traefik_subdomain: '{{ radarr_prometheus_basics_name }}'
-radarr_prometheus_traefik_domain: []
+radarr_prometheus_traefik_domain: ''
 radarr_prometheus_traefik_network: 'traefik_proxy'
 radarr_prometheus_traefik_port: '9090'
 
@@ -66,7 +66,7 @@ radarr_prometheus_traefik_port: '9090'
 
 radarr_prometheus_cloudflare_record_type: 'A'  ## A (IPV4), AAAA (IPV6), CNAME, etc
 radarr_prometheus_cloudflare_proxy: 'true'  ## true for cloudflare DNS SSL
-radarr_prometheus_cloudflare_api_token: []
+radarr_prometheus_cloudflare_api_token: ''
 
 ################################
 # METRICS

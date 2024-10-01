@@ -4,17 +4,17 @@
 # ENV
 ################################
 
-radarr_nfs_env_timezone: []
-radarr_nfs_env_puid: []
-radarr_nfs_env_pgid: []
+radarr_nfs_env_timezone: ''
+radarr_nfs_env_puid: ''
+radarr_nfs_env_pgid: ''
 
 ################################
 # AUTOFS
 ################################
 
-radarr_autofs_media_mount_host_address: []
-radarr_autofs_media_mount_remote_path: []
-radarr_autofs_media_mount_local_dir_name: []
+radarr_autofs_media_mount_host_address: ''
+radarr_autofs_media_mount_remote_path: ''
+radarr_autofs_media_mount_local_dir_name: ''
 radarr_autofs_media_mount_opt: '-fstype=nfs,port=2049,rw,timeo=100,noatime'
 
   ## autofs to mount the nfs media remote on the host
@@ -25,9 +25,9 @@ radarr_autofs_media_mount_opt: '-fstype=nfs,port=2049,rw,timeo=100,noatime'
 
   ## media remote
 
-radarr_nfs_media_name: []
-radarr_nfs_media_address: []
-radarr_nfs_media_device: []
+radarr_nfs_media_name: ''
+radarr_nfs_media_address: ''
+radarr_nfs_media_device: ''
 radarr_nfs_media_permissions: 'rw'
 radarr_nfs_media_version: '4'
 

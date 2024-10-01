@@ -4,8 +4,8 @@
 # ENV
 ################################
 
-radarr_rclone_docker_plugin_env_puid: []
-radarr_rclone_docker_plugin_env_pgid: []
+radarr_rclone_docker_plugin_env_puid: ''
+radarr_rclone_docker_plugin_env_pgid: ''
 
 ################################
 # MOUNTS
@@ -14,12 +14,12 @@ radarr_rclone_docker_plugin_env_pgid: []
   ## qbittorrent remote
 
 radarr_rclone_qbittorrent_type: 'sftp'
-radarr_rclone_qbittorrent_name: []
-radarr_rclone_qbittorrent_mount_path: []
-radarr_rclone_qbittorrent_host: []
-radarr_rclone_qbittorrent_user: []
-radarr_rclone_qbittorrent_pass: []
-radarr_rclone_qbittorrent_key_file_pass: []
+radarr_rclone_qbittorrent_name: ''
+radarr_rclone_qbittorrent_mount_path: ''
+radarr_rclone_qbittorrent_host: ''
+radarr_rclone_qbittorrent_user: ''
+radarr_rclone_qbittorrent_pass: ''
+radarr_rclone_qbittorrent_key_file_pass: ''
 
   ## mount path can be anything, but if using unpackerr it should mimic the path to download folder on remote client
   ## unpackerr is highly recommended for archived downloads on remote clients. radarr may import incomplete files, otherwise.
@@ -42,5 +42,5 @@ radarr_rclone_docker_plugin_global_args: "--rc --rc-web-gui --rc-web-gui-update 
 ################################
 
 radarr_rclone_docker_plugin_webui_addr: ':5572'
-radarr_rclone_docker_plugin_webui_user: []
-radarr_rclone_docker_plugin_webui_pass: []
+radarr_rclone_docker_plugin_webui_user: ''
+radarr_rclone_docker_plugin_webui_pass: ''

@@ -4,7 +4,7 @@
 # BASICS
 ################################
 
-radarr_postgres_basics_host: []  # machine address for ansible postgres module to ping database
+radarr_postgres_basics_host: ''  # machine address for ansible postgres module to ping database
 radarr_postgres_basics_name: 'postgres'
 radarr_postgres_basics_image_repo: 'postgres'
 radarr_postgres_basics_image_tag: '14'
@@ -15,16 +15,16 @@ radarr_postgres_basics_restart_policy: 'unless-stopped'
 ################################
 
 radarr_postgres_network: 'postgres'
-radarr_postgres_network_driver: []  ## only required if network doesn't exist
-radarr_postgres_network_subnet: []  ## only required if network doesn't exist
+radarr_postgres_network_driver: ''  ## only required if network doesn't exist
+radarr_postgres_network_subnet: ''  ## only required if network doesn't exist
 
 ################################
 # ENV
 ################################
 
-radarr_postgres_env_timezone: []
-radarr_postgres_env_puid: []
-radarr_postgres_env_pgid: []
+radarr_postgres_env_timezone: ''
+radarr_postgres_env_puid: ''
+radarr_postgres_env_pgid: ''
 
 ################################
 # PORTS
@@ -56,8 +56,8 @@ radarr_postgres_binds_keys_mapping:
 # AUTH
 ################################
 
-radarr_postgres_auth_user: []
-radarr_postgres_auth_password: []
+radarr_postgres_auth_user: ''
+radarr_postgres_auth_password: ''
 radarr_postgres_auth_password_file: 'postgres_key.txt'
 
 ################################
