@@ -1,9 +1,6 @@
 ---
 
-radarr_rclone_qbittorrent_is_enabled: '{{ (radarr_rclone_qbittorrent_type is defined) and
-                                          (radarr_rclone_qbittorrent_type is not none) and
-                                          (radarr_rclone_qbittorrent_type | trim | length > 0) and
-                                          (radarr_rclone_qbittorrent_name is defined) and
+radarr_rclone_qbittorrent_is_enabled: '{{ (radarr_rclone_qbittorrent_name is defined) and
                                           (radarr_rclone_qbittorrent_name is not none) and
                                           (radarr_rclone_qbittorrent_name | trim | length > 0) and
                                           (radarr_rclone_qbittorrent_mount_path is defined) and

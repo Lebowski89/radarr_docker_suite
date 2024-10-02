@@ -12,16 +12,6 @@ radarr_api_key_is_enabled: '{{ (radarr_api_key is defined) and
 # NETWORK
 ################################
 
-radarr_network_backend_is_enabled: '{{ (radarr_network_backend is defined) and
-                                       (radarr_network_backend is not none) and
-                                       (radarr_network_backend | trim | length > 0) and
-                                       (radarr_network_backend_driver is defined) and
-                                       (radarr_network_backend_driver is not none) and
-                                       (radarr_network_backend_driver | trim | length > 0) and
-                                       (radarr_network_backend_subnet is defined) and
-                                       (radarr_network_backend_subnet is not none) and
-                                       (radarr_network_backend_subnet | trim | length > 0) }}'
-
 radarr_network_default_bind:
   - name: '{{ radarr_network_backend }}'
 radarr_network_postgres_bind:
@@ -42,16 +32,23 @@ radarr_docker_networks: '{{ radarr_network_default_bind
                                if radarr_prometheus_is_enabled
                                else []) }}'
 
+radarr_network_backend_is_enabled: '{{ (radarr_network_backend_driver is defined) and
+                                       (radarr_network_backend_driver is not none) and
+                                       (radarr_network_backend_driver | trim | length > 0) and
+                                       (radarr_network_backend_subnet is defined) and
+                                       (radarr_network_backend_subnet is not none) and
+                                       (radarr_network_backend_subnet | trim | length > 0) }}'
+
 ################################
 # BINDS
 ################################
 
 radarr_docker_volumes: '{{ radarr_volumes_binds_default
                            + (radarr_nfs_media_bind
-                              if radarr_nfs_media_volume_result.exists
+                              if radarr_nfs_media_volume_is_enabled
                               else [])
                            + (radarr_rclone_qbittorrent_bind
-                              if radarr_rclone_qbittorrent_volume_result.exists
+                              if radarr_rclone_qbittorrent_is_enabled
                               else []) }}'
 
 ################################
@@ -65,32 +62,6 @@ radarr_authelia_is_enabled: '{{ (radarr_authelia_name is defined) and
 ################################
 # TRAEFIK
 ################################
-
-radarr_traefik_is_enabled: '{{ (radarr_traefik_network is defined) and
-                               (radarr_traefik_network is not none) and
-                               (radarr_traefik_network | trim | length > 0) and
-                               (radarr_traefik_subdomain is defined) and
-                               (radarr_traefik_subdomain is not none) and
-                               (radarr_traefik_subdomain | trim | length > 0) and
-                               (radarr_traefik_domain is defined) and
-                               (radarr_traefik_domain is not none) and
-                               (radarr_traefik_domain | trim | length > 0) and
-                               (radarr_traefik_port is defined) and
-                               (radarr_traefik_port is not none) and
-                               (radarr_traefik_port | trim | length > 0) and
-                               (radarr_traefik_themepark_theme is defined) and
-                               (radarr_traefik_themepark_theme is not none) and
-                               (radarr_traefik_themepark_theme | trim | length > 0) }}'
-
-radarr_traefik_network_is_enabled: '{{ (radarr_traefik_network is defined) and
-                                       (radarr_traefik_network is not none) and
-                                       (radarr_traefik_network | trim | length > 0) and
-                                       (radarr_traefik_network_driver is defined) and
-                                       (radarr_traefik_network_driver is not none) and
-                                       (radarr_traefik_network_driver | trim | length > 0) and
-                                       (radarr_traefik_network_subnet is defined) and
-                                       (radarr_traefik_network_subnet is not none) and
-                                       (radarr_traefik_network_subnet | trim | length > 0) }}'
 
 radarr_traefik_labels_default:
   traefik.enable: 'true'
@@ -135,6 +106,17 @@ radarr_traefik_labels: '{{ radarr_traefik_labels_default
                            | combine(radarr_traefik_labels_router_secure)
                            | combine(radarr_traefik_labels_themepark) }}'
 
+radarr_traefik_is_enabled: '{{ (radarr_traefik_domain is defined) and
+                               (radarr_traefik_domain is not none) and
+                               (radarr_traefik_domain | trim | length > 0) }}'
+
+radarr_traefik_network_is_enabled: '{{ (radarr_traefik_network_driver is defined) and
+                                       (radarr_traefik_network_driver is not none) and
+                                       (radarr_traefik_network_driver | trim | length > 0) and
+                                       (radarr_traefik_network_subnet is defined) and
+                                       (radarr_traefik_network_subnet is not none) and
+                                       (radarr_traefik_network_subnet | trim | length > 0) }}'
+
 ################################
 # CLOUDFLARE
 ################################
@@ -142,12 +124,6 @@ radarr_traefik_labels: '{{ radarr_traefik_labels_default
 radarr_cloudflare_record: '{{ radarr_traefik_subdomain }}'
 radarr_cloudflare_zone: '{{ radarr_traefik_domain }}'
 
-radarr_cloudflare_is_enabled: '{{ (radarr_cloudflare_record_type is defined) and
-                                  (radarr_cloudflare_record_type is not none) and
-                                  (radarr_cloudflare_record_type | trim | length > 0) and
-                                  (radarr_cloudflare_proxy is defined) and
-                                  (radarr_cloudflare_proxy is not none) and
-                                  (radarr_cloudflare_proxy | trim | length > 0) and
-                                  (radarr_cloudflare_api_token is defined) and
+radarr_cloudflare_is_enabled: '{{ (radarr_cloudflare_api_token is defined) and
                                   (radarr_cloudflare_api_token is not none) and
                                   (radarr_cloudflare_api_token | trim | length > 0) }}'
