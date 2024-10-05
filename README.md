@@ -1,7 +1,7 @@
 Radarr Suite
 =========
 
-    Ansible role to automate the full set-up of Radarr - a movie collection manager for Usenet and BitTorrent users.
+    Standalone Ansible role to automate the full set-up of Radarr - a movie collection manager for Usenet and BitTorrent users.
       - Includes the installation of Docker (Debian-based distros) and Ansible dependencies within the role.
       - Includes the option of setting up and connecting Radarr to a Postgres database.
       - Includes the option of setting up Prometheus and a Radarr Promtheus exporter to gather various metrics about your Radarr usage and music collection.
