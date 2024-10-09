@@ -30,7 +30,7 @@
 
     - name: Include docker install tasks
       when: '"docker-ce" not in ansible_facts.packages'
-      ansible.builtin.include_tasks: 'sub_tasks/docker.yml'
+      ansible.builtin.include_tasks: sub_tasks/docker.yml
 
 ################################
 # CLEAN UP
@@ -124,8 +124,8 @@
       when: radarr_api_key_is_enabled
       community.general.xml:
         path: '{{ radarr_paths_location }}/config.xml'
-        xpath: "/Config/ApiKey"
-        content: "text"
+        xpath: /Config/ApiKey
+        content: text
       register: xml_radarr_api
 
     - name: Radarr config.xml | insert existing api key
@@ -134,15 +134,15 @@
         - ((xml_radarr_api.matches[0].ApiKey is defined) and (xml_radarr_api.matches[0].ApiKey != radarr_api_key))
       community.general.xml:
         path: '{{ radarr_paths_location }}/config.xml'
-        xpath: '/Config/ApiKey'
+        xpath: /Config/ApiKey
         value: '{{ radarr_api_key }}'
 
     - name: Radarr config.xml | Lookup AuthenticationMethod value
       when: radarr_authelia_is_enabled
       community.general.xml:
         path: '{{ radarr_paths_location }}/config.xml'
-        xpath: "/Config/AuthenticationMethod"
-        content: "text"
+        xpath: /Config/AuthenticationMethod
+        content: text
       register: xml_radarr_external
 
     - name: Register authelia container
@@ -158,8 +158,8 @@
         - ((xml_radarr_external.matches[0].AuthenticationMethod is defined) and (xml_radarr_external.matches[0].AuthenticationMethod != 'External'))
       community.general.xml:
         path: '{{ radarr_paths_location }}/config.xml'
-        xpath: '/Config/AuthenticationMethod'
-        value: 'External'
+        xpath: /Config/AuthenticationMethod
+        value: External
 
 ################################
 # POSTGRES
@@ -167,15 +167,15 @@
 
 - name: Include postgres container tasks
   when: radarr_postgres_is_enabled
-  ansible.builtin.include_tasks: 'postgres/postgres_container.yml'
+  ansible.builtin.include_tasks: postgres/postgres_container.yml
 
 - name: Include postgres database tasks
   when: radarr_postgres_is_enabled
-  ansible.builtin.include_tasks: 'postgres/postgres_database.yml'
+  ansible.builtin.include_tasks: postgres/postgres_database.yml
 
 - name: Include postgres radarr config.xml tasks
   when: radarr_postgres_is_enabled
-  ansible.builtin.include_tasks: 'postgres/postgres_config_xml.yml'
+  ansible.builtin.include_tasks: postgres/postgres_config_xml.yml
 
 ################################
 # TRAEFIK
@@ -210,14 +210,14 @@
 
 - name: Include cloudflare tasks
   when: radarr_cloudflare_is_enabled
-  ansible.builtin.include_tasks: 'sub_tasks/cloudflare.yml'
+  ansible.builtin.include_tasks: sub_tasks/cloudflare.yml
 
 ################################
 # NFS
 ################################
 
 - name: Include nfs tasks
-  ansible.builtin.include_tasks: 'sub_tasks/nfs.yml'
+  ansible.builtin.include_tasks: sub_tasks/nfs.yml
 
 ################################
 # RCLONE
@@ -225,7 +225,7 @@
 
 - name: Include rclone tasks
   when: radarr_rclone_qbittorrent_is_enabled
-  ansible.builtin.include_tasks: 'sub_tasks/rclone.yml'
+  ansible.builtin.include_tasks: sub_tasks/rclone.yml
 
 ################################
 # METRICS
@@ -233,17 +233,17 @@
 
 - name: Include prometheus container tasks
   when: radarr_prometheus_is_enabled
-  ansible.builtin.include_tasks: 'prometheus/prometheus_container.yml'
+  ansible.builtin.include_tasks: prometheus/prometheus_container.yml
 
 - name: Include prometheus exporter tasks
   when:
     - radarr_prometheus_is_enabled
     - radarr_prometheus_exporter_is_enabled
-  ansible.builtin.include_tasks: 'prometheus/prometheus_exporter.yml'
+  ansible.builtin.include_tasks: prometheus/prometheus_exporter.yml
 
 - name: Include prometheus cloudflare tasks
   when: radarr_prometheus_is_enabled
-  ansible.builtin.include_tasks: 'prometheus/prometheus_cloudflare.yml'
+  ansible.builtin.include_tasks: prometheus/prometheus_cloudflare.yml
 
 ################################
 # THEMEPARK
@@ -259,7 +259,7 @@
 
     - name: Include themepark tasks
       when: not radarr_themepark_container_result.exists
-      ansible.builtin.include_tasks: 'sub_tasks/themepark.yml'
+      ansible.builtin.include_tasks: sub_tasks/themepark.yml
 
 ################################
 # CONTAINER
@@ -296,4 +296,4 @@
 
 - name: Include recyclarr tasks
   when: radarr_recyclarr_is_enabled
-  ansible.builtin.include_tasks: 'sub_tasks/recyclarr.yml'
+  ansible.builtin.include_tasks: sub_tasks/recyclarr.yml
