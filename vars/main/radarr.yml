@@ -52,7 +52,7 @@ radarr_env_themepark_local:
   TP_SCHEME: 'http'
   TP_DOMAIN: '{{ radarr_themepark_domain_local }}'
   TP_HOTIO: 'true'
-  TP_THEME: '{{ radarr_theme }}'
+  TP_THEME: '{{ radarr_theme_local }}'
 
 radarr_docker_envs: '{{ radarr_env_default
                         | combine((radarr_env_themepark_local
@@ -93,7 +93,7 @@ radarr_traefik_labels_default:
 radarr_traefik_labels_router:
   traefik.http.routers.radarr-rtr.entrypoints: 'http'
   traefik.http.routers.radarr-rtr.rule: 'Host(`{{ radarr_traefik_subdomain }}.{{ radarr_traefik_domain }}`)'
-  traefik.http.routers.radarr-rtr.middlewares: 'globalHeaders@file,robotHeaders@file,authelia@docker'
+  traefik.http.routers.radarr-rtr.middlewares: 'globalHeaders@file,robotHeaders@file,authelia@docker,cloudflarewarp@docker'
   traefik.http.routers.radarr-rtr.priority: '20'
   traefik.http.routers.radarr-rtr.service: 'radarr-rtr-svc'
   traefik.http.services.radarr-rtr-svc.loadbalancer.server.port: '{{ radarr_traefik_port }}'
@@ -106,14 +106,14 @@ radarr_traefik_labels_router:
 radarr_traefik_labels_router_secure:
   traefik.http.routers.radarr-rtr-secure.entrypoints: 'https'
   traefik.http.routers.radarr-rtr-secure.rule: 'Host(`{{ radarr_traefik_subdomain }}.{{ radarr_traefik_domain }}`)'
-  traefik.http.routers.radarr-rtr-secure.middlewares: 'globalHeaders@file,secureHeaders@file,robotHeaders@file,authelia@docker'
+  traefik.http.routers.radarr-rtr-secure.middlewares: 'globalHeaders@file,secureHeaders@file,robotHeaders@file,authelia@docker,cloudflarewarp@docker,themepark-radarr'
   traefik.http.routers.radarr-rtr-secure.priority: '20'
   traefik.http.routers.radarr-rtr-secure.service: 'radarr-rtr-secure-svc'
   traefik.http.routers.radarr-rtr-secure.tls.certresolver: 'dns-cloudflare'
   traefik.http.routers.radarr-rtr-secure.tls.options: 'tls-opts@file'
   traefik.http.services.radarr-rtr-secure-svc.loadbalancer.server.port: '{{ radarr_traefik_port }}'
   traefik.http.routers.radarr-api-rtr-secure.entrypoints: 'https'
-  traefik.http.routers.radarr-api-rtr-secure.middlewares: 'globalHeaders@file,secureHeaders@file,robotHeaders@file'
+  traefik.http.routers.radarr-api-rtr-secure.middlewares: 'globalHeaders@file,secureHeaders@file,robotHeaders@file,cloudflarewarp@docker'
   traefik.http.routers.radarr-api-rtr-secure.priority: '30'
   traefik.http.routers.radarr-api-rtr-secure.rule: 'Host(`{{ radarr_traefik_subdomain }}.{{ radarr_traefik_domain }}`) && (PathPrefix(`/api`) || PathPrefix(`/feed`) || PathPrefix(`/ping`))'
   traefik.http.routers.radarr-api-rtr-secure.service: 'radarr-rtr-secure-svc'
@@ -122,7 +122,7 @@ radarr_traefik_labels_router_secure:
 
 radarr_traefik_labels_themepark:
   traefik.http.middlewares.themepark-radarr.plugin.themepark.app: 'radarr'
-  traefik.http.middlewares.themepark-radarr.plugin.themepark.theme: '{{ radarr_theme }}'
+  traefik.http.middlewares.themepark-radarr.plugin.themepark.theme: '{{ radarr_theme_traefik }}'
 
 radarr_traefik_labels: '{{ radarr_traefik_labels_default
                            | combine(radarr_traefik_labels_router)
