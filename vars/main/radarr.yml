@@ -40,10 +40,33 @@ radarr_network_backend_is_enabled: '{{ (radarr_network_backend_driver is defined
                                        (radarr_network_backend_subnet | trim | length > 0) }}'
 
 ################################
+# ENV
+################################
+
+radarr_env_default:
+  PUID: '{{ radarr_env_puid }}'
+  PGID: '{{ radarr_env_pgid }}'
+  TZ: '{{ radarr_env_timezone }}'
+
+radarr_env_themepark_local:
+  TP_SCHEME: 'http'
+  TP_DOMAIN: '{{ radarr_themepark_domain_local }}'
+  TP_HOTIO: 'true'
+  TP_THEME: '{{ radarr_theme }}'
+
+radarr_docker_envs: '{{ radarr_env_default
+                        | combine((radarr_env_themepark_local
+                                   if radarr_themepark_local_is_enabled
+                                   else [])) }}'
+
+################################
 # BINDS
 ################################
 
 radarr_docker_volumes: '{{ radarr_volumes_binds_default
+                           + (radarr_volumes_binds_themepark
+                              if radarr_themepark_local_is_enabled
+                              else [])
                            + (radarr_nfs_media_bind
                               if radarr_nfs_media_volume_is_enabled
                               else [])
@@ -98,8 +121,8 @@ radarr_traefik_labels_router_secure:
   traefik.http.routers.radarr-api-rtr-secure.tls.options: 'tls-opts@file'
 
 radarr_traefik_labels_themepark:
-  traefik.http.middlewares.themepark-portainer.plugin.themepark.app: '{{ radarr_basics_name }}'
-  traefik.http.middlewares.themepark-portainer.plugin.themepark.theme: '{{ radarr_traefik_themepark_theme }}'
+  traefik.http.middlewares.themepark-radarr.plugin.themepark.app: 'radarr'
+  traefik.http.middlewares.themepark-radarr.plugin.themepark.theme: '{{ radarr_theme }}'
 
 radarr_traefik_labels: '{{ radarr_traefik_labels_default
                            | combine(radarr_traefik_labels_router)
@@ -127,3 +150,20 @@ radarr_cloudflare_zone: '{{ radarr_traefik_domain }}'
 radarr_cloudflare_is_enabled: '{{ (radarr_cloudflare_api_token is defined) and
                                   (radarr_cloudflare_api_token is not none) and
                                   (radarr_cloudflare_api_token | trim | length > 0) }}'
+
+################################
+# THEME
+################################
+
+radarr_themepark_local_is_enabled: '{{ (radarr_themepark_env_timezone is defined) and
+                                       (radarr_themepark_env_timezone is not none) and
+                                       (radarr_themepark_env_timezone | trim | length > 0) and
+                                       (radarr_themepark_env_puid is defined) and
+                                       (radarr_themepark_env_puid is not none) and
+                                       (radarr_themepark_env_puid | trim | length > 0) and
+                                       (radarr_themepark_env_pgid is defined) and
+                                       (radarr_themepark_env_pgid is not none) and
+                                       (radarr_themepark_env_pgid | trim | length > 0) and
+                                       (radarr_themepark_domain_local is defined) and
+                                       (radarr_themepark_domain_local is not none) and
+                                       (radarr_themepark_domain_local | trim | length > 0) }}'

@@ -1,0 +1,51 @@
+---
+
+################################
+# BASICS
+################################
+
+radarr_themepark_basics_name: 'theme-park'
+radarr_themepark_basics_image_repo: 'ghcr.io/themepark-dev/theme.park'
+radarr_themepark_basics_image_tag: 'latest'
+radarr_themepark_basics_restart_policy: 'unless-stopped'
+
+################################
+# ENV
+################################
+
+radarr_themepark_env_timezone: ''
+radarr_themepark_env_puid: ''
+radarr_themepark_env_pgid: ''
+
+################################
+# DOMAIN (LOCAL)
+################################
+
+  ## Fill if wanting themes served locally via http on local network.
+  ## Will deploy theme-park in a docker container.
+  ## Must be accessible to your browser - try: '<local_machine_ip>:{{ radarr_themepark_ports_host }}'
+
+radarr_themepark_domain_local: ''
+
+################################
+# PORTS
+################################
+
+radarr_themepark_ports_host: '8089'
+radarr_themepark_ports_cont: '80'
+
+################################
+# PATHS
+################################
+
+radarr_themepark_paths_folder: '{{ radarr_themepark_basics_name }}'
+radarr_themepark_paths_location: '/opt/{{ radarr_themepark_paths_folder }}'
+
+################################
+# BINDS
+################################
+
+radarr_themepark_bind_mount:
+  - '{{ radarr_themepark_paths_location }}:/config'
+
+
