@@ -1,0 +1,25 @@
+---
+
+################################
+# BASICS
+################################
+
+radarr_prometheus_exporter_name: '{{ radarr_basics_name }}_exporter'
+radarr_prometheus_exporter_image_repo: 'ghcr.io/onedr0p/exportarr'
+radarr_prometheus_exporter_image_tag: 'v2.0.1'
+radarr_prometheus_exporter_restart_policy: 'unless-stopped'
+
+################################
+# ENV
+################################
+
+radarr_prometheus_exporter_env_timezone: 'Etc/UTC'
+radarr_prometheus_exporter_env_puid: '1000'
+radarr_prometheus_exporter_env_pgid: '1000'
+
+################################
+# PORTS
+################################
+
+radarr_prometheus_exporter_host_port: '9708'
+radarr_prometheus_exporter_cont_port: '9708'

@@ -14,16 +14,16 @@ radarr_prometheus_basics_restart_policy: 'unless-stopped'
 ################################
 
 radarr_prometheus_network: 'prometheus'
-radarr_prometheus_network_driver: ''
+radarr_prometheus_network_driver: 'bridge'
 radarr_prometheus_network_subnet: ''
 
 ################################
 # ENV
 ################################
 
-radarr_prometheus_env_timezone: ''
-radarr_prometheus_env_puid: ''
-radarr_prometheus_env_pgid: ''
+radarr_prometheus_env_timezone: 'Etc/UTC'
+radarr_prometheus_env_puid: '1000'
+radarr_prometheus_env_pgid: '1000'
 
 ################################
 # PORTS
@@ -40,7 +40,7 @@ radarr_prometheus_paths_folder: '{{ radarr_prometheus_basics_name }}'  # name of
 radarr_prometheus_paths_location: '/opt/{{ radarr_prometheus_paths_folder }}'  # path of prometheus config folder
 radarr_prometheus_paths_data_location: '{{ radarr_prometheus_paths_location }}/data'  # path where prometheus metrics are stored
                                                                                       # be mindful of metrics retention and size
-
+                                                                                      
 ################################
 # BINDS
 ################################
@@ -52,39 +52,9 @@ radarr_prometheus_binds_data_mapping:
   - '{{ radarr_prometheus_paths_data_location }}:/data'
 
 ################################
-# TRAEFIK
-################################
-
-radarr_prometheus_traefik_subdomain: '{{ radarr_prometheus_basics_name }}'
-radarr_prometheus_traefik_domain: ''
-radarr_prometheus_traefik_network: '{{ radarr_traefik_network }}'
-radarr_prometheus_traefik_port: '9090'
-
-################################
-# CLOUDFLARE
-################################
-
-radarr_prometheus_cloudflare_record_type: 'A'  ## A (IPV4), AAAA (IPV6), CNAME, etc
-radarr_prometheus_cloudflare_proxy: 'true'  ## true for cloudflare DNS SSL
-radarr_prometheus_cloudflare_api_token: ''
-
-################################
 # METRICS
 ################################
 
 radarr_prometheus_metrics_retention_time: '15d'
 radarr_prometheus_metrics_retention_size: '0'  ## 0 for disabled. Use size units, i.e, 500MB, 2GB, 1TB, etc.
 
-################################
-# EXPORTER
-################################
-
-radarr_prometheus_exporter_name: '{{ radarr_basics_name }}_exporter'
-radarr_prometheus_exporter_image_repo: 'ghcr.io/onedr0p/exportarr'
-radarr_prometheus_exporter_image_tag: 'v2.0.1'
-radarr_prometheus_exporter_restart_policy: 'unless-stopped'
-radarr_prometheus_exporter_env_puid: ''
-radarr_prometheus_exporter_env_pgid: ''
-radarr_prometheus_exporter_env_timezone: ''
-radarr_prometheus_exporter_host_port: '9708'
-radarr_prometheus_exporter_cont_port: '9708'

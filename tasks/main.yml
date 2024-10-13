@@ -5,6 +5,7 @@
 ################################
 
 - name: Install prerequisite apt packages
+  when: radarr_toggles_enable_apt_packages
   ansible.builtin.apt:
     pkg:
       - python3-requests
@@ -22,7 +23,9 @@
 ################################
 
 - name: Apt install docker if required
-  when: ansible_os_family == 'Debian'
+  when:
+    - radarr_toggles_enable_docker_install
+    - ansible_os_family == 'Debian'
   block:
     - name: Gather apt facts
       ansible.builtin.package_facts:
@@ -65,7 +68,7 @@
         name: '{{ radarr_network_backend }}'
       register: radarr_net_backend_result
 
-    - name: Radarr network backend builtin fail
+    - name: radarr network backend builtin fail
       ansible.builtin.fail:
         msg: radarr backend network does not exist nor is it enabled. Ensure the radarr backend network variables contain valid entries.
       when:
@@ -146,13 +149,16 @@
       register: xml_radarr_external
 
     - name: Register authelia container
-      when: radarr_authelia_is_enabled
+      when: 
+        - radarr_toggles_enable_authelia
+        - radarr_authelia_is_enabled
       community.docker.docker_container_info:
         name: '{{ radarr_authelia_name }}'
       register: radarr_authelia_container_result
 
     - name: Radarr config.xml | change auth method to external  ## prevents double login when using authelia
       when:
+        - radarr_toggles_enable_authelia
         - radarr_authelia_is_enabled
         - radarr_authelia_container_result.exists
         - ((xml_radarr_external.matches[0].AuthenticationMethod is defined) and (xml_radarr_external.matches[0].AuthenticationMethod != 'External'))
@@ -166,23 +172,25 @@
 ################################
 
 - name: Include postgres container tasks
-  when: radarr_postgres_is_enabled
-  ansible.builtin.include_tasks: postgres/postgres_container.yml
+  when: radarr_toggles_enable_postgres
+  ansible.builtin.include_tasks: postgres/container.yml
 
 - name: Include postgres database tasks
-  when: radarr_postgres_is_enabled
-  ansible.builtin.include_tasks: postgres/postgres_database.yml
+  when: radarr_toggles_enable_postgres
+  ansible.builtin.include_tasks: postgres/database.yml
 
 - name: Include postgres radarr config.xml tasks
-  when: radarr_postgres_is_enabled
-  ansible.builtin.include_tasks: postgres/postgres_config_xml.yml
+  when: radarr_toggles_enable_postgres
+  ansible.builtin.include_tasks: postgres/config_xml.yml
 
 ################################
 # TRAEFIK
 ################################
 
 - name: Conduct traefik tasks
-  when: radarr_traefik_is_enabled
+  when: 
+    - radarr_toggles_enable_traefik
+    - radarr_traefik_is_enabled
   block:
     - name: Register traefik network
       community.docker.docker_network_info:
@@ -209,7 +217,9 @@
 ################################
 
 - name: Include cloudflare tasks
-  when: radarr_cloudflare_is_enabled
+  when: 
+    - radarr_toggles_enable_cloudflare_dns
+    - radarr_cloudflare_is_enabled
   ansible.builtin.include_tasks: sub_tasks/cloudflare.yml
 
 ################################
@@ -224,7 +234,7 @@
 ################################
 
 - name: Include rclone tasks
-  when: radarr_rclone_qbittorrent_is_enabled
+  when: radarr_toggles_enable_rclone
   ansible.builtin.include_tasks: sub_tasks/rclone.yml
 
 ################################
@@ -232,25 +242,25 @@
 ################################
 
 - name: Include prometheus container tasks
-  when: radarr_prometheus_is_enabled
-  ansible.builtin.include_tasks: prometheus/prometheus_container.yml
+  when: radarr_toggles_enable_metrics
+  ansible.builtin.include_tasks: prometheus/container.yml
 
 - name: Include prometheus exporter tasks
-  when:
-    - radarr_prometheus_is_enabled
-    - radarr_prometheus_exporter_is_enabled
-  ansible.builtin.include_tasks: prometheus/prometheus_exporter.yml
+  when: radarr_toggles_enable_metrics
+  ansible.builtin.include_tasks: prometheus/exporter.yml
 
 - name: Include prometheus cloudflare tasks
-  when: radarr_prometheus_is_enabled
-  ansible.builtin.include_tasks: prometheus/prometheus_cloudflare.yml
+  when: 
+    - radarr_toggles_enable_metrics
+    - radarr_prometheus_cloudflare_is_enabled
+  ansible.builtin.include_tasks: prometheus/cloudflare.yml
 
 ################################
 # THEMEPARK
 ################################
 
 - name: Run themepark tasks
-  when: radarr_themepark_local_is_enabled
+  when: radarr_toggles_enable_themepark_local
   block:
     - name: Register themepark container
       community.docker.docker_container_info:
@@ -266,7 +276,7 @@
 ################################
 
 - name: Create radarr container
-  when: not radarr_traefik_is_enabled
+  when: (not radarr_toggles_enable_traefik) or (not radarr_traefik_is_enabled)
   community.docker.docker_container:
     name: '{{ radarr_basics_name }}'
     image: '{{ radarr_basics_image_repo }}:{{ radarr_basics_image_tag }}'
@@ -278,7 +288,9 @@
     restart_policy: '{{ radarr_basics_restart_policy }}'
 
 - name: Create radarr traefik container
-  when: radarr_traefik_is_enabled
+  when:
+    - radarr_toggles_enable_traefik
+    - radarr_traefik_is_enabled
   community.docker.docker_container:
     name: '{{ radarr_basics_name }}'
     image: '{{ radarr_basics_image_repo }}:{{ radarr_basics_image_tag }}'
@@ -295,5 +307,5 @@
 ################################
 
 - name: Include recyclarr tasks
-  when: radarr_recyclarr_is_enabled
+  when: radarr_toggles_enable_recyclarr
   ansible.builtin.include_tasks: sub_tasks/recyclarr.yml

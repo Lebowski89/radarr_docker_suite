@@ -103,7 +103,7 @@
 - name: Clean radarr appdir
   block:
     - name: Remove sqlite database files
-      when: radarr_postgres_clean_files
+      when: radarr_toggles_clean_files
       ansible.builtin.file:
         path: '{{ radarr_paths_location }}/{{ item }}'
         state: absent
@@ -116,7 +116,7 @@
         - radarr.db-wal
 
     - name: Remove sqlite backups folder
-      when: radarr_postgres_clean_folders
+      when: radarr_toggles_clean_folders
       ansible.builtin.file:
         path: '{{ radarr_paths_location }}/Backups'
         state: absent

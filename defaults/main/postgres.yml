@@ -15,16 +15,16 @@ radarr_postgres_basics_restart_policy: 'unless-stopped'
 ################################
 
 radarr_postgres_network: 'postgres'
-radarr_postgres_network_driver: ''  ## only required if network doesn't exist
+radarr_postgres_network_driver: 'bridge'  ## only required if network doesn't exist
 radarr_postgres_network_subnet: ''  ## only required if network doesn't exist
 
 ################################
 # ENV
 ################################
 
-radarr_postgres_env_timezone: ''
-radarr_postgres_env_puid: ''
-radarr_postgres_env_pgid: ''
+radarr_postgres_env_timezone: 'Etc/UTC'
+radarr_postgres_env_puid: '1000'
+radarr_postgres_env_pgid: '1000'
 
 ################################
 # PORTS
@@ -58,21 +58,11 @@ radarr_postgres_binds_keys_mapping:
 
 radarr_postgres_auth_user: ''
 radarr_postgres_auth_password: ''
-radarr_postgres_auth_password_file: 'postgres_key.txt'
+radarr_postgres_auth_password_file: 'postgres_key.txt'  ## will be created by role 
 
 ################################
 # DATABASE
 ################################
 
 radarr_postgres_database_main: 'radarr-main'
-radarr_postgres_database_log: 'radarr-log' 
-
-################################
-# CLEAN
-################################
-
-  ## warning: the below toggles will delete any existing sqlite database files in the radarr appdir.
-  ## toggle false if you're planning to migrate db data. See: https://wiki.servarr.com/radarr/postgres-setup
-
-radarr_postgres_clean_files: false  # true will delete any existing sqlite database files in the radarr appdir.
-radarr_postgres_clean_folders: false  # true will delete sqlite backups folder in the radarr appdir.
+radarr_postgres_database_log: 'radarr-log'

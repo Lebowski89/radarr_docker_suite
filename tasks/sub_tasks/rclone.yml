@@ -1,12 +1,12 @@
 ---
 
-- name: Register radarr rclone qbittorrent volume
+- name: Register radarr rclone volume
   community.docker.docker_volume_info:
-    name: '{{ radarr_rclone_qbittorrent_name }}'
-  register: radarr_rclone_qbittorrent_initial_volume_result
+    name: '{{ radarr_rclone_volume_name }}'
+  register: radarr_rclone_volume_initial_volume_result
 
 - name: Perform rclone docker volume creation tasks
-  when: not radarr_rclone_qbittorrent_initial_volume_result.exists
+  when: not radarr_rclone_volume_initial_volume_result.exists
   block:
     - name: Install FUSE driver prerequisite
       when: ansible_os_family == 'Debian'
@@ -58,16 +58,16 @@
         group: '{{ radarr_rclone_docker_plugin_env_pgid }}'
         mode: '0644'
 
-    - name: Create sftp rclone qbittorrent volume
+    - name: Create sftp rclone volume
       community.docker.docker_volume:
-        name: '{{ radarr_rclone_qbittorrent_name }}'
+        name: '{{ radarr_rclone_volume_name }}'
         driver: rclone
         driver_options:
-          type: '{{ radarr_rclone_qbittorrent_type }}'
-          path: '{{ radarr_rclone_qbittorrent_mount_path }}'
-          sftp-host: '{{ radarr_rclone_qbittorrent_host }}'
-          sftp-user: '{{ radarr_rclone_qbittorrent_user }}'
-          sftp-pass: '{{ radarr_rclone_qbittorrent_pass }}'
-          sftp-key-file-pass: '{{ radarr_rclone_qbittorrent_key_file_pass }}'
+          type: '{{ radarr_rclone_volume_type }}'
+          path: '{{ radarr_rclone_volume_mount_path }}'
+          sftp-host: '{{ radarr_rclone_volume_host }}'
+          sftp-user: '{{ radarr_rclone_volume_user }}'
+          sftp-pass: '{{ radarr_rclone_volume_pass }}'
+          sftp-key-file-pass: '{{ radarr_rclone_volume_key_file_pass }}'
           allow_other: 'true'
           vfs_cache_mode: 'off'

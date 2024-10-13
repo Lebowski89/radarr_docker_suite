@@ -1,0 +1,71 @@
+---
+
+################################
+# DOMAIN
+################################
+
+radarr_traefik_subdomain:
+radarr_traefik_domain:
+radarr_traefik_port: '7878'
+
+################################
+# NETWORK
+################################
+
+radarr_traefik_network: 'traefik_proxy'
+radarr_traefik_network_driver: 'bridge'  ## only required if network doesn't exist
+radarr_traefik_network_subnet: ''  ## only required if network doesn't exist
+
+################################
+# TLS
+################################
+
+radarr_traefik_tls_certresolver: 'dns-cloudflare'
+radarr_traefik_tls_options: 'tls-opts@file'
+
+################################
+# ROUTER (HTTP)
+################################
+
+  ## http
+radarr_traefik_http_middlewares: 'globalHeaders@file,redirect-to-https@docker,robotHeaders@file'
+radarr_traefik_http_rule: 'Host(`{{ radarr_traefik_subdomain }}.{{ radarr_traefik_domain }}`)'
+radarr_traefik_http_priority: '20'
+
+  ## http-api
+radarr_traefik_http_api_middlewares: 'globalHeaders@file,redirect-to-https@docker,robotHeaders@file'
+radarr_traefik_http_api_rule: '{{ radarr_traefik_http_rule }} && (PathPrefix(`/api`) || PathPrefix(`/feed`) || PathPrefix(`/ping`))'
+radarr_traefik_http_api_priority: '30'
+
+################################
+# ROUTER (HTTPS)
+################################
+
+  ## https
+radarr_traefik_https_middlewares: 'globalHeaders@file,secureHeaders@file,robotHeaders@file'
+radarr_traefik_https_rule: 'Host(`{{ radarr_traefik_subdomain }}.{{ radarr_traefik_domain }}`)'
+radarr_traefik_https_priority: '20'
+
+  ## https-api
+radarr_traefik_https_api_middlewares: 'globalHeaders@file,secureHeaders@file,robotHeaders@file'
+radarr_traefik_https_api_rule: '{{ radarr_traefik_https_rule }} && (PathPrefix(`/api`) || PathPrefix(`/feed`) || PathPrefix(`/ping`))'
+radarr_traefik_https_api_priority: '30'
+
+################################
+# AUTHELIA
+################################
+
+radarr_traefik_authelia_container_name: 'authelia'
+radarr_traefik_authelia_middleware: 'authelia@docker'
+
+################################
+# CLOUDFLARE
+################################
+
+radarr_traefik_cloudflare_middleware: 'cloudflarewarp@docker'
+
+################################
+# THEME-PARK
+################################
+
+radarr_traefik_themepark_theme: 'hotpink'

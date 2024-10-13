@@ -7,15 +7,6 @@
 radarr_postgres_is_enabled: '{{ (radarr_postgres_basics_host is defined) and
                                 (radarr_postgres_basics_host is not none) and
                                 (radarr_postgres_basics_host | trim | length > 0) and
-                                (radarr_postgres_env_timezone is defined) and
-                                (radarr_postgres_env_timezone is not none) and
-                                (radarr_postgres_env_timezone | trim | length > 0) and
-                                (radarr_postgres_env_puid is defined) and
-                                (radarr_postgres_env_puid is not none) and
-                                (radarr_postgres_env_puid | trim | length > 0) and
-                                (radarr_postgres_env_pgid is defined) and
-                                (radarr_postgres_env_pgid is not none) and
-                                (radarr_postgres_env_pgid | trim | length > 0) and
                                 (radarr_postgres_auth_user is defined) and
                                 (radarr_postgres_auth_user is not none) and
                                 (radarr_postgres_auth_user | trim | length > 0) and

@@ -13,9 +13,9 @@ radarr_recyclarr_basics_restart_policy: 'unless-stopped'
 # ENV
 ################################
 
-radarr_recyclarr_env_timezone: ''
-radarr_recyclarr_env_puid: ''
-radarr_recyclarr_env_pgid: ''
+radarr_recyclarr_env_timezone: 'Etc/UTC'
+radarr_recyclarr_env_puid: '1000'
+radarr_recyclarr_env_pgid: '1000'
 
 ################################
 # PATHS

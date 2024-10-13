@@ -1,7 +1,9 @@
 ---
 
 - name: Perform autofs media mount tasks
-  when: radarr_autofs_media_mount_is_enabled
+  when:
+    - radarr_toggles_enable_nfs_autofs
+    - radarr_autofs_mount_is_enabled
   block:
     - name: Install autofs
       when: ansible_os_family == 'Debian'
@@ -33,7 +35,7 @@
     - name: Add mount to auto.nfsdb file
       ansible.builtin.lineinfile:
         dest: '{{ radarr_autofs_nfsdb_file }}'
-        line: '{{ radarr_autofs_media_mount_local_dir_name }} {{ radarr_autofs_media_mount_opt }} {{ radarr_autofs_media_mount_host_address }}:{{ radarr_autofs_media_mount_remote_path }}'
+        line: '{{ radarr_autofs_mount_local_dir_name }} {{ radarr_autofs_mount_opt }} {{ radarr_autofs_mount_host_address }}:{{ radarr_autofs_mount_remote_path }}'
         state: present
         create: true
         owner: '{{ radarr_nfs_env_puid }}'
@@ -43,15 +45,17 @@
         - redo mounts
 
 - name: Create radarr nfs media volume
-  when: radarr_nfs_media_volume_is_enabled
+  when: 
+    - radarr_toggles_enable_nfs_volume
+    - radarr_nfs_volume_is_enabled
   block:
-    - name: Create radarr media nfs volume
+    - name: Create radarr nfs volume
       community.docker.docker_volume:
-        volume_name: '{{ radarr_nfs_media_name }}'
+        volume_name: '{{ radarr_nfs_volume_name }}'
         state: present
         recreate: options-changed
         driver: local
         driver_options:
           type: nfs
-          o: 'addr={{ radarr_nfs_media_address }},{{ radarr_nfs_media_permissions }},nfsvers={{ radarr_nfs_media_version }}'
-          device: '{{ radarr_nfs_media_device }}'
+          o: 'addr={{ radarr_nfs_volume_address }},{{ radarr_nfs_volume_permissions }},nfsvers={{ radarr_nfs_volume_version }}'
+          device: '{{ radarr_nfs_volume_device }}'
