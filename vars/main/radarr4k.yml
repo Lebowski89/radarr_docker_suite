@@ -1,0 +1,170 @@
+---
+
+################################
+# API
+################################
+
+radarr_4k_api_key_is_enabled: '{{ (radarr_4k_api_key is defined) and
+                                  (radarr_4k_api_key is not none) and
+                                  (radarr_4k_api_key | trim | length > 0) }}'
+
+################################
+# NETWORK
+################################
+
+radarr_4k_network_default_bind:
+  - name: '{{ radarr_network_backend }}'
+radarr_4k_network_postgres_bind:
+  - name: '{{ radarr_postgres_network }}'
+radarr_4k_network_traefik_bind:
+  - name: '{{ radarr_traefik_network }}'
+radarr_4k_network_prometheus_bind:
+  - name: '{{ radarr_prometheus_network }}'
+
+radarr_4k_networks: '{{ radarr_4k_network_default_bind
+                        + (radarr_4k_network_postgres_bind
+                           if radarr_toggles_enable_postgres
+                           else [])
+                        + (radarr_4k_network_traefik_bind
+                           if radarr_toggles_enable_traefik
+                           else [])
+                        + (radarr_4k_network_prometheus_bind
+                           if radarr_toggles_enable_metrics
+                           else []) }}'
+
+################################
+# ENV
+################################
+
+radarr_4k_env_default:
+  PUID: '{{ radarr_4k_env_puid }}'
+  PGID: '{{ radarr_4k_env_pgid }}'
+  TZ: '{{ radarr_4k_env_timezone }}'
+
+radarr_4k_env_themepark_local:
+  TP_SCHEME: 'http'
+  TP_DOMAIN: '{{ radarr_4k_themepark_domain_local }}'
+  TP_HOTIO: 'true'
+  TP_THEME: '{{ radarr_4k_themepark_domain_local_theme }}'
+
+radarr_4k_envs: '{{ radarr_4k_env_default
+                    | combine((radarr_4k_env_themepark_local
+                               if radarr_toggles_enable_themepark_local
+                               else [])) }}'
+                           
+################################
+# LABELS
+################################
+
+radarr_4k_labels: '{{ radarr_4k_traefik_labels_default
+                      | combine(radarr_4k_traefik_labels_router)
+                      | combine(radarr_4k_traefik_labels_router_secure)
+                      | combine((radarr_4k_traefik_labels_themepark
+                                 if radarr_toggles_enable_themepark_traefik
+                                 else [])) }}'
+
+################################
+# BINDS
+################################
+
+radarr_4k_volumes: '{{ radarr_4k_volumes_binds_default
+                       + (radarr_4k_volumes_binds_themepark
+                          if radarr_toggles_enable_themepark_local
+                          else [])
+                       + (radarr_4k_nfs_volume_bind
+                          if radarr_toggles_enable_nfs_volume
+                          else [])
+                       + (radarr_4k_rclone_volume_bind
+                          if radarr_toggles_enable_rclone
+                          else []) }}'
+
+################################
+# AUTHELIA
+################################
+
+radarr_4k_authelia_is_enabled: '{{ (radarr_4k_authelia_container_name is defined) and
+                                   (radarr_4k_authelia_container_name is not none) and
+                                   (radarr_4k_authelia_container_name | trim | length > 0) }}'
+
+################################
+# TRAEFIK
+################################
+
+radarr_4k_traefik_labels_default:
+  traefik.enable: 'true'
+  traefik.docker.network: '{{ radarr_traefik_network }}'
+
+radarr_4k_traefik_labels_router:
+  ## http
+  traefik.http.routers.radarr_4k-rtr.entrypoints: 'http'
+  traefik.http.routers.radarr_4k-rtr.rule: '{{ radarr_4k_traefik_http_rule }}'
+  traefik.http.routers.radarr_4k-rtr.middlewares: '{{ radarr_4k_traefik_http_middlewares_bind }}'
+  traefik.http.routers.radarr_4k-rtr.priority: '{{ radarr_4k_traefik_http_priority }}'
+  traefik.http.routers.radarr_4k-rtr.service: 'radarr4k-rtr-svc'
+  traefik.http.services.radarr_4k-rtr-svc.loadbalancer.server.port: '{{ radarr_4k_traefik_port }}'
+  ## http-api
+  traefik.http.routers.radarr_4k-api-rtr.entrypoints: 'http'
+  traefik.http.routers.radarr_4k-api-rtr.rule: '{{ radarr_4k_traefik_http_api_rule }}'
+  traefik.http.routers.radarr_4k-api-rtr.middlewares: '{{ radarr_4k_traefik_http_api_middlewares_bind }}'
+  traefik.http.routers.radarr_4k-api-rtr.priority: '{{ radarr_4k_traefik_http_api_priority }}'
+  traefik.http.routers.radarr_4k-api-rtr.service: 'radarr4k-rtr-svc'
+
+radarr_4k_traefik_labels_router_secure:
+  ## https
+  traefik.http.routers.radarr_4k-rtr-secure.entrypoints: 'https'
+  traefik.http.routers.radarr_4k-rtr-secure.rule: '{{ radarr_4k_traefik_https_rule }}'
+  traefik.http.routers.radarr_4k-rtr-secure.middlewares: '{{ radarr_4k_traefik_https_middlewares_bind }}'
+  traefik.http.routers.radarr_4k-rtr-secure.priority: '{{ radarr_4k_traefik_https_priority }}'
+  traefik.http.routers.radarr_4k-rtr-secure.service: 'radarr4k-rtr-secure-svc'
+  traefik.http.routers.radarr_4k-rtr-secure.tls.certresolver: '{{ radarr_traefik_tls_certresolver }}'
+  traefik.http.routers.radarr_4k-rtr-secure.tls.options: '{{ radarr_traefik_tls_options }}'
+  traefik.http.services.radarr_4k-rtr-secure-svc.loadbalancer.server.port: '{{ radarr_4k_traefik_port }}'
+  ## https-api
+  traefik.http.routers.radarr_4k-api-rtr-secure.entrypoints: 'https'
+  traefik.http.routers.radarr_4k-api-rtr-secure.rule: '{{ radarr_4k_traefik_https_api_rule }}'
+  traefik.http.routers.radarr_4k-api-rtr-secure.middlewares: '{{ radarr_4k_traefik_https_api_middlewares_bind }}'
+  traefik.http.routers.radarr_4k-api-rtr-secure.priority: '{{ radarr_4k_traefik_https_api_priority }}'
+  traefik.http.routers.radarr_4k-api-rtr-secure.service: 'radarr4k-rtr-secure-svc'
+  traefik.http.routers.radarr_4k-api-rtr-secure.tls.certresolver: '{{ radarr_traefik_tls_certresolver }}'
+  traefik.http.routers.radarr_4k-api-rtr-secure.tls.options: '{{ radarr_traefik_tls_options }}'
+  ## theme-park
+radarr_4k_traefik_labels_themepark:
+  traefik.http.middlewares.themepark-radarr4k.plugin.themepark.app: 'radarr'
+  traefik.http.middlewares.themepark-radarr4k.plugin.themepark.theme: '{{ radarr_4k_traefik_themepark_theme }}'
+
+radarr_4k_traefik_http_middlewares_bind: '{{ radarr_4k_traefik_http_middlewares
+                                             + (",cloudflarewarp@docker"
+                                                if (radarr_toggles_enable_cloudflarewarp)
+                                                else "")
+                                             + (",authelia@docker"
+                                                if (radarr_toggles_enable_authelia_middleware)
+                                                else "") }}'
+
+radarr_4k_traefik_http_api_middlewares_bind: '{{ radarr_4k_traefik_http_api_middlewares
+                                                 + (",cloudflarewarp@docker"
+                                                    if (radarr_toggles_enable_cloudflarewarp)
+                                                    else "") }}'
+
+radarr_4k_traefik_https_middlewares_bind: '{{ radarr_4k_traefik_https_middlewares
+                                              + (",cloudflarewarp@docker"
+                                                 if (radarr_toggles_enable_cloudflarewarp)
+                                                 else "")
+                                              + (",authelia@docker"
+                                                 if (radarr_toggles_enable_authelia_middleware)
+                                                 else "") 
+                                              + (",themepark-radarr4k"
+                                                 if (radarr_toggles_enable_themepark_traefik)
+                                                 else "") }}'
+
+radarr_4k_traefik_https_api_middlewares_bind: '{{ radarr_4k_traefik_https_api_middlewares
+                                                  + (",cloudflarewarp@docker"
+                                                     if (radarr_toggles_enable_cloudflarewarp)
+                                                     else "") }}'
+
+################################
+# CLOUDFLARE
+################################
+
+radarr_4k_cloudflare_is_enabled: '{{ (radarr_4k_cloudflare_api_token is defined) and
+                                     (radarr_4k_cloudflare_api_token is not none) and
+                                     (radarr_4k_cloudflare_api_token | trim | length > 0) }}'

@@ -21,16 +21,16 @@ radarr_network_traefik_bind:
 radarr_network_prometheus_bind:
   - name: '{{ radarr_prometheus_network }}'
 
-radarr_docker_networks: '{{ radarr_network_default_bind
-                            + (radarr_network_postgres_bind
-                               if radarr_toggles_enable_postgres
-                               else [])
-                            + (radarr_network_traefik_bind
-                               if radarr_toggles_enable_traefik
-                               else [])
-                            + (radarr_network_prometheus_bind
-                               if radarr_toggles_enable_metrics
-                               else []) }}'
+radarr_networks: '{{ radarr_network_default_bind
+                     + (radarr_network_postgres_bind
+                        if radarr_toggles_enable_postgres
+                        else [])
+                     + (radarr_network_traefik_bind
+                        if radarr_toggles_enable_traefik
+                        else [])
+                     + (radarr_network_prometheus_bind
+                        if radarr_toggles_enable_metrics
+                        else []) }}'
 
 radarr_network_backend_is_enabled: '{{ (radarr_network_backend_driver is defined) and
                                        (radarr_network_backend_driver is not none) and
@@ -54,33 +54,44 @@ radarr_env_themepark_local:
   TP_HOTIO: 'true'
   TP_THEME: '{{ radarr_themepark_domain_local_theme }}'
 
-radarr_docker_envs: '{{ radarr_env_default
-                        | combine((radarr_env_themepark_local
-                                   if radarr_toggles_enable_themepark_local
-                                   else [])) }}'
+radarr_envs: '{{ radarr_env_default
+                 | combine((radarr_env_themepark_local
+                            if radarr_toggles_enable_themepark_local
+                            else [])) }}'
+              
+################################
+# LABELS
+################################
+
+radarr_labels: '{{ radarr_traefik_labels_default
+                   | combine(radarr_traefik_labels_router)
+                   | combine(radarr_traefik_labels_router_secure)
+                   | combine((radarr_traefik_labels_themepark
+                              if radarr_toggles_enable_themepark_traefik
+                              else [])) }}'
 
 ################################
 # BINDS
 ################################
 
-radarr_docker_volumes: '{{ radarr_volumes_binds_default
-                           + (radarr_volumes_binds_themepark
-                              if radarr_toggles_enable_themepark_local
-                              else [])
-                           + (radarr_nfs_volume_bind
-                              if radarr_toggles_enable_nfs_volume
-                              else [])
-                           + (radarr_rclone_volume_bind
-                              if radarr_toggles_enable_rclone
-                              else []) }}'
+radarr_volumes: '{{ radarr_volumes_binds_default
+                    + (radarr_volumes_binds_themepark
+                       if radarr_toggles_enable_themepark_local
+                       else [])
+                    + (radarr_nfs_volume_bind
+                       if radarr_toggles_enable_nfs_volume
+                       else [])
+                    + (radarr_rclone_volume_bind
+                       if radarr_toggles_enable_rclone
+                       else []) }}'
 
 ################################
 # AUTHELIA
 ################################
 
-radarr_authelia_is_enabled: '{{ (radarr_traefik_authelia_container_name is defined) and
-                                (radarr_traefik_authelia_container_name is not none) and
-                                (radarr_traefik_authelia_container_name | trim | length > 0) }}'
+radarr_authelia_is_enabled: '{{ (radarr_authelia_container_name is defined) and
+                                (radarr_authelia_container_name is not none) and
+                                (radarr_authelia_container_name | trim | length > 0) }}'
 
 ################################
 # TRAEFIK
@@ -128,13 +139,6 @@ radarr_traefik_labels_themepark:
   traefik.http.middlewares.themepark-radarr.plugin.themepark.app: 'radarr'
   traefik.http.middlewares.themepark-radarr.plugin.themepark.theme: '{{ radarr_traefik_themepark_theme }}'
 
-radarr_traefik_labels: '{{ radarr_traefik_labels_default
-                           | combine(radarr_traefik_labels_router)
-                           | combine(radarr_traefik_labels_router_secure)
-                           | combine((radarr_traefik_labels_themepark
-                                      if radarr_toggles_enable_themepark_traefik
-                                      else [])) }}'
-
 radarr_traefik_is_enabled: '{{ (radarr_traefik_domain is defined) and
                                (radarr_traefik_domain is not none) and
                                (radarr_traefik_domain | trim | length > 0) }}'
@@ -178,9 +182,6 @@ radarr_traefik_https_api_middlewares_bind: '{{ radarr_traefik_https_api_middlewa
 ################################
 # CLOUDFLARE
 ################################
-
-radarr_cloudflare_record: '{{ radarr_traefik_subdomain }}'
-radarr_cloudflare_zone: '{{ radarr_traefik_domain }}'
 
 radarr_cloudflare_is_enabled: '{{ (radarr_cloudflare_api_token is defined) and
                                   (radarr_cloudflare_api_token is not none) and

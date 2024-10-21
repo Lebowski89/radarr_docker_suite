@@ -1,69 +1,30 @@
 ---
 
-- name: Create recyclarr appdata directory
-  ansible.builtin.file:
-    path: '{{ lookup("vars", role_prefix + "_recyclarr_paths_location") }}'
-    state: directory
-    owner: '{{ lookup("vars", role_prefix + "_recyclarr_env_puid") }}'
-    group: '{{ lookup("vars", role_prefix + "_recyclarr_env_pgid") }}'
-    mode: '0755'
-
-- name: Check config exists
-  ansible.builtin.stat:
-    path: '{{ lookup("vars", role_prefix + "_recyclarr_paths_location") }}/recyclarr.yml'
-  register: radarr_recyclarr_config
-
-- name: Generate default config
-  when: not radarr_recyclarr_config.stat.exists
-  community.docker.docker_container:
-    name: recyclarr-config
-    image: '{{ lookup("vars", role_prefix + "_recyclarr_basics_image_repo") }}:{{ lookup("vars", role_prefix + "_recyclarr_basics_image_tag") }}'
-    pull: true
-    state: started
-    container_default_behavior: compatibility
-    networks: '{{ lookup("vars", role_prefix + "_network_default_bind") }}'
-    env:
-      RECYCLARR_CREATE_CONFIG: 'true'
-    user: '{{ lookup("vars", role_prefix + "_recyclarr_env_puid") }}:{{ lookup("vars", role_prefix + "_recyclarr_env_pgid") }}'
-    volumes: '{{ lookup("vars", role_prefix + "_recyclarr_bind_mount") }}'
-    cleanup: true
-
-- name: Remove config container
-  community.docker.docker_container:
-    container_default_behavior: compatibility
-    name: recyclarr-config
-    state: absent
-    stop_timeout: 10
-  register: radarr_remove_recyclarr_config_container
-  retries: 5
-  delay: 10
-  until: radarr_remove_recyclarr_config_container is succeeded
-
-- name: Insert recyclarr secrets settings
+- name: Insert radarr4k's recyclarr secrets settings
   ansible.builtin.blockinfile:
     path: '{{ lookup("vars", role_prefix + "_recyclarr_paths_location") }}/secrets.yml'
-    marker: "## {mark} ANSIBLE RADARR MANAGED BLOCK ##"
+    marker: "## {mark} ANSIBLE RADARR4K MANAGED BLOCK ##"
     owner: '{{ lookup("vars", role_prefix + "_recyclarr_env_puid") }}'
     group: '{{ lookup("vars", role_prefix + "_recyclarr_env_pgid") }}'
     mode: '0664'
     create: true
     block: |
-      radarr_base_url: http://{{ lookup("vars", role_prefix + "_basics_name") }}:{{ lookup("vars", role_prefix + "_ports_cont") }}
-      radarr_api_key: {{ lookup("vars", role_prefix + "_api_key") }}
+      radarr4k_base_url: http://{{ lookup("vars", role_prefix + "_4k" + "_basics_name") }}:{{ lookup("vars", role_prefix + "_4k" + "_ports_cont") }}
+      radarr4k_api_key: {{ lookup("vars", role_prefix + "_4k" + "_api_key") }}
   notify:
     - restart recyclarr
 
-- name: Insert radarr's recyclarr config settings
+- name: Insert radarr4k's recyclarr config settings
   ansible.builtin.blockinfile:  ## these are settings I use. Yours may differ. See: https://recyclarr.dev/wiki/
-    path: '{{ lookup("vars", role_prefix + "_recyclarr_paths_location") }}/configs/radarr.yml'
-    marker: "## {mark} ANSIBLE RADARR MANAGED BLOCK ##"
+    path: '{{ lookup("vars", role_prefix + "_recyclarr_paths_location") }}/configs/radarr4k.yml'
+    marker: "## {mark} ANSIBLE RADARR4K MANAGED BLOCK ##"
     owner: '{{ lookup("vars", role_prefix + "_recyclarr_env_puid") }}'
     group: '{{ lookup("vars", role_prefix + "_recyclarr_env_pgid") }}'
     mode: '0664'
     create: true
     block: |
       radarr:
-        radarr:
+        radarr4k:
           media_naming:
             folder: plex
             movie:
@@ -72,23 +33,21 @@
           quality_definition:
             type: movie
           quality_profiles:
-            - name: "Remux + WEB 1080p"
+            - name: "Remux + WEB 2160p"
               reset_unmatched_scores:
                 enabled: true
               upgrade:
                 allowed: true
-                until_quality: Remux-1080p
+                until_quality: Remux-2160p
                 until_score: 10000
               min_format_score: 0
               quality_sort: top
               qualities:
-                - name: Remux-1080p
-                - name: Bluray-1080p
-                  enabled: false
-                - name: "WEB 1080p"
+                - name: Remux-2160p
+                - name: "WEB 2160p"
                   qualities:
-                    - WEBRip-1080p
-                    - WEBDL-1080p
+                    - WEBRip-2160p
+                    - WEBDL-2160p
           delete_old_custom_formats: true
           replace_existing_custom_formats: true
           custom_formats:
@@ -197,34 +156,13 @@
                 - 3dce1fce9ac06d1349dfbd9186289385 # NOW
                   # Optional
                 - b6832f586342ef70d9c128d40c07b872 # Bad Dual Groups
-                - f700d29429c023a5734505e77daeaea7 # DV (FEL)
-                - 923b6abef9b17f937fab56cfcf89e1f1 # DV (WEBDL)
                 - 90cedc1fea7ea5d11298bebd3d1d3223 # EVO (no WEBDL)
                 - ae9b7c9ebde1f3bd336a8cbd1ec4c5e5 # No-RlsGroup
                 - 7357cf5161efbf8c4d5d0c30b4815ee2 # Obfuscated
                 - 5c44f52a8714fdd79bb4d98e2673be1f # Retags
                 - c465ccc73923871b3eb1802042331306 # Line/Mic Dubbed
-                - 73613461ac2cea99d52c4cd6e177ab82 # HFR
                 - 9c38ebb7384dada637be8899efa68e6f # SDR
               assign_scores_to:
-                - name: "Remux + WEB 1080p"
+                - name: "Remux + WEB 2160p"
   notify:
     - restart recyclarr
-
-- name: Register recyclarr container
-  community.docker.docker_container_info:
-    name: '{{ lookup("vars", role_prefix + "_recyclarr_basics_name") }}'
-  register: radarr_recyclarr_container_result
-
-- name: Create recyclarr container
-  when: not radarr_recyclarr_container_result.exists
-  community.docker.docker_container:
-    name: '{{ lookup("vars", role_prefix + "_recyclarr_basics_name") }}'
-    image: '{{ lookup("vars", role_prefix + "_recyclarr_basics_image_repo") }}:{{ lookup("vars", role_prefix + "_recyclarr_basics_image_tag") }}'
-    networks: '{{ lookup("vars", role_prefix + "_network_default_bind") }}'
-    env:
-      TZ: '{{ lookup("vars", role_prefix + "_recyclarr_env_timezone") }}'
-      CRON_SCHEDULE: '@daily'
-    user: '{{ lookup("vars", role_prefix + "_recyclarr_env_puid") }}:{{ lookup("vars", role_prefix + "_recyclarr_env_pgid") }}'
-    volumes: '{{ lookup("vars", role_prefix + "_recyclarr_bind_mount") }}'
-    restart_policy: '{{ lookup("vars", role_prefix + "_recyclarr_basics_restart_policy") }}'

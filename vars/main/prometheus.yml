@@ -16,16 +16,14 @@ radarr_prometheus_commands:
 
 radarr_prometheus_network_default_bind:
   - name: '{{ radarr_network_backend }}'
-radarr_prometheus_network_traefik_bind:
-  - name: '{{ radarr_prometheus_traefik_network }}'
-radarr_prometheus_network_bind:
   - name: '{{ radarr_prometheus_network }}'
+radarr_prometheus_network_traefik_bind:
+  - name: '{{ radarr_traefik_network }}'
 
-radarr_prometheus_docker_networks: '{{ radarr_prometheus_network_default_bind
-                                       + (radarr_prometheus_network_traefik_bind
-                                          if radarr_toggles_enable_traefik
-                                          else [])
-                                       + radarr_prometheus_network_bind }}'
+radarr_prometheus_networks: '{{ radarr_prometheus_network_default_bind
+                                + (radarr_prometheus_network_traefik_bind
+                                   if radarr_toggles_enable_traefik
+                                   else []) }}'
 
 radarr_prometheus_network_is_enabled: '{{ (radarr_prometheus_network_driver is defined) and
                                           (radarr_prometheus_network_driver is not none) and
@@ -33,6 +31,14 @@ radarr_prometheus_network_is_enabled: '{{ (radarr_prometheus_network_driver is d
                                           (radarr_prometheus_network_subnet is defined) and
                                           (radarr_prometheus_network_subnet is not none) and
                                           (radarr_prometheus_network_subnet | trim | length > 0) }}'
+
+################################
+# LABELS
+################################
+
+radarr_prometheus_labels: '{{ radarr_prometheus_traefik_labels_default
+                              | combine(radarr_prometheus_traefik_labels_router)
+                              | combine(radarr_prometheus_traefik_labels_router_secure) }}'
 
 ################################
 # BINDS
@@ -45,11 +51,11 @@ radarr_prometheus_volumes_binds: '{{ radarr_prometheus_binds_config_mapping
 # TRAEFIK
 ################################
 
-radarr_promtheus_traefik_labels_default:
+radarr_prometheus_traefik_labels_default:
   traefik.enable: 'true'
-  traefik.docker.network: '{{ radarr_prometheus_traefik_network }}'
+  traefik.docker.network: '{{ radarr_traefik_network }}'
 
-radarr_promtheus_traefik_labels_router:
+radarr_prometheus_traefik_labels_router:
   traefik.http.routers.prometheus-rtr.entrypoints: 'http'
   traefik.http.routers.prometheus-rtr.rule: '{{ radarr_prometheus_traefik_http_rule }}'
   traefik.http.routers.prometheus-rtr.middlewares: '{{ radarr_prometheus_traefik_http_middlewares_bind }}'
@@ -57,23 +63,15 @@ radarr_promtheus_traefik_labels_router:
   traefik.http.routers.prometheus-rtr.service: 'prometheus-rtr-svc'
   traefik.http.services.prometheus-rtr-svc.loadbalancer.server.port: '{{ radarr_prometheus_traefik_port }}'
 
-radarr_promtheus_traefik_labels_router_secure:
+radarr_prometheus_traefik_labels_router_secure:
   traefik.http.routers.prometheus-rtr-secure.entrypoints: 'https'
   traefik.http.routers.prometheus-rtr-secure.rule: '{{ radarr_prometheus_traefik_https_rule }}'
   traefik.http.routers.prometheus-rtr-secure.middlewares: '{{ radarr_prometheus_traefik_https_middlewares_bind }}'
   traefik.http.routers.prometheus-rtr-secure.priority: '{{ radarr_prometheus_traefik_https_priority }}'
   traefik.http.routers.prometheus-rtr-secure.service: 'prometheus-rtr-secure-svc'
-  traefik.http.routers.prometheus-rtr-secure.tls.certresolver: '{{ radarr_prometheus_traefik_tls_certresolver }}'
-  traefik.http.routers.prometheus-rtr-secure.tls.options: '{{ radarr_prometheus_traefik_tls_options }}'
+  traefik.http.routers.prometheus-rtr-secure.tls.certresolver: '{{ radarr_traefik_tls_certresolver }}'
+  traefik.http.routers.prometheus-rtr-secure.tls.options: '{{ radarr_traefik_tls_options }}'
   traefik.http.services.prometheus-rtr-secure-svc.loadbalancer.server.port: '{{ radarr_prometheus_traefik_port }}'
-
-radarr_prometheus_traefik_labels: '{{ radarr_prometheus_traefik_labels_default
-                                      | combine(radarr_prometheus_traefik_labels_router)
-                                      | combine(radarr_prometheus_traefik_labels_router_secure) }}'
-
-radarr_prometheus_traefik_is_enabled: '{{ (radarr_prometheus_traefik_domain is defined) and
-                                          (radarr_prometheus_traefik_domain is not none) and
-                                          (radarr_prometheus_traefik_domain | trim | length > 0) }}'
 
 radarr_prometheus_traefik_http_middlewares_bind: '{{ radarr_prometheus_traefik_http_middlewares
                                                      + (",cloudflarewarp@docker"
@@ -92,17 +90,6 @@ radarr_prometheus_traefik_https_middlewares_bind: '{{ radarr_prometheus_traefik_
                                                          else "") }}'
 
 ################################
-# CLOUDFLARE
-################################
-
-radarr_prometheus_cloudflare_record: '{{ radarr_prometheus_traefik_subdomain }}'
-radarr_prometheus_cloudflare_zone: '{{ radarr_prometheus_traefik_domain }}'
-
-radarr_prometheus_cloudflare_is_enabled: '{{ (radarr_prometheus_cloudflare_api_token is defined) and
-                                             (radarr_prometheus_cloudflare_api_token is not none) and
-                                             (radarr_prometheus_cloudflare_api_token | trim | length > 0) }}'
-
-################################
 # EXPORTER
 ################################
 
@@ -113,4 +100,3 @@ radarr_prometheus_exporter_network_bind:
 
 radarr_prometheus_exporter_networks: '{{ radarr_prometheus_exporter_network_default_bind
                                          + radarr_prometheus_exporter_network_bind }}'
-

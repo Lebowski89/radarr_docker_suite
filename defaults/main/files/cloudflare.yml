@@ -1,0 +1,20 @@
+---
+
+################################
+# DNS
+################################
+
+  ## radarr
+radarr_cloudflare_record_type: 'A'  ## A (IPV4), AAAA (IPV6), CNAME, etc
+radarr_cloudflare_proxy: 'true'  ## true for cloudflare DNS SSL
+radarr_cloudflare_api_token: ''
+
+  ## radarr4k
+radarr_4k_cloudflare_record_type: 'A'  ## A (IPV4), AAAA (IPV6), CNAME, etc
+radarr_4k_cloudflare_proxy: 'true'  ## true for cloudflare DNS SSL
+radarr_4k_cloudflare_api_token: '{{ radarr_cloudflare_api_token }}'
+
+  ## prometheus
+radarr_prometheus_cloudflare_record_type: 'A'  ## A (IPV4), AAAA (IPV6), CNAME, etc
+radarr_prometheus_cloudflare_proxy: 'true'  ## true for cloudflare DNS SSL
+radarr_prometheus_cloudflare_api_token: '{{ radarr_cloudflare_api_token }}'

@@ -30,5 +30,10 @@ radarr_nfs_volume_version: '4'
 # BINDS
 ################################
 
+  ## radarr
 radarr_nfs_volume_bind:
+  - '{{ radarr_nfs_volume_name }}:/data'
+
+  ## radarr4k
+radarr_4k_nfs_volume_bind:
   - '{{ radarr_nfs_volume_name }}:/data'

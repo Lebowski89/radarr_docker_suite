@@ -1,0 +1,33 @@
+---
+
+- name: Apply exporter prometheus scrape config
+  ansible.builtin.blockinfile:
+    path: '{{ lookup("vars", role_prefix + "_prometheus_paths_location") }}/prometheus.yml'
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ role_prefix }}-4k-exporter #"
+    block: |
+      {% filter indent(width=2, first=true) %}
+      - job_name: {{ lookup("vars", role_prefix + "_4k" + "_prometheus_exporter_basics_name") }}
+        scrape_interval: 1m
+        static_configs:
+          - targets: ['{{ lookup("vars", role_prefix + "_4k" + "_prometheus_exporter_basics_name") }}:{{ lookup("vars", role_prefix + "_4k" + "_prometheus_exporter_ports_cont") }}']
+      {% endfilter %}
+  notify:
+    - restart prometheus
+
+- name: Create prometheus exporter container
+  community.docker.docker_container:
+    name: '{{ lookup("vars", role_prefix + "_4k" + "_prometheus_exporter_basics_name") }}'
+    image: '{{ lookup("vars", role_prefix + "_4k" + "_prometheus_exporter_basics_image_repo") }}:{{ lookup("vars", role_prefix + "_4k" + "_prometheus_exporter_basics_image_tag") }}'
+    command: ["radarr"]
+    networks: '{{ lookup("vars", role_prefix + "_prometheus_exporter_networks") }}'
+    env:
+      PUID: '{{ lookup("vars", role_prefix + "_4k" + "_prometheus_exporter_env_puid") }}'
+      PGID: '{{ lookup("vars", role_prefix + "_4k" + "_prometheus_exporter_env_pgid") }}'
+      TZ: '{{ lookup("vars", role_prefix + "_4k" + "_prometheus_exporter_env_timezone") }}'
+      PORT: '{{ lookup("vars", role_prefix + "_4k" + "_prometheus_exporter_ports_cont") }}'
+      URL: 'http://{{ lookup("vars", role_prefix + "_4k" + "_basics_name") }}:{{ lookup("vars", role_prefix + "_4k" + "_ports_cont") }}'
+      API_KEY: '{{ lookup("vars", role_prefix + "_4k" + "_api_key") }}'
+      ENABLE_ADDITIONAL_METRICS: 'true'
+    ports:
+      - '{{ lookup("vars", role_prefix + "_4k" + "_prometheus_exporter_ports_host") }}:{{ lookup("vars", role_prefix + "_4k" + "_prometheus_exporter_ports_cont") }}'
+    restart_policy: '{{ lookup("vars", role_prefix + "_4k" + "_prometheus_exporter_basics_restart_policy") }}'

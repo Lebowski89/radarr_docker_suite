@@ -23,8 +23,13 @@ radarr_themepark_env_pgid: '1000'
 
   ## Must be accessible to your browser - try: '<local_machine_ip>:{{ radarr_themepark_ports_host }}'
 
+  ## radarr
 radarr_themepark_domain_local: ''
 radarr_themepark_domain_local_theme: 'hotline'  ## theme to use for local theme-park deployment
+
+  ## radarr4k
+radarr_4k_themepark_domain_local: '{{ radarr_themepark_domain_local }}'
+radarr_4k_themepark_domain_local_theme: 'hotline'  ## theme to use for local theme-park deployment
 
 ################################
 # PORTS
@@ -44,7 +49,11 @@ radarr_themepark_paths_location: '/opt/{{ radarr_themepark_paths_folder }}'
 # BINDS
 ################################
 
+  ## radarr
 radarr_themepark_bind_mount:
   - '{{ radarr_themepark_paths_location }}:/config'
 
+  ## radarr4k
+radarr_4k_themepark_bind_mount:
+  - '{{ radarr_themepark_paths_location }}:/config'
 

@@ -19,8 +19,10 @@
 - name: Restart prometheus container
   community.docker.docker_container:
     container_default_behavior: compatibility
-    name: '{{ radarr_prometheus_basics_name }}'
+    name: '{{ lookup("vars", role_prefix + "_prometheus_basics_name") }}'
     state: started
+    comparisons:
+      '*': ignore
     restart: true
     stop_timeout: 10
   register: restart_radarr_prometheus_docker
@@ -32,8 +34,10 @@
 - name: Restart recyclarr container
   community.docker.docker_container:
     container_default_behavior: compatibility
-    name: '{{ radarr_recyclarr_basics_name }}'
+    name: '{{ lookup("vars", role_prefix + "_recyclarr_basics_name") }}'
     state: started
+    comparisons:
+      '*': ignore
     restart: true
     stop_timeout: 10
   register: restart_radarr_recyclarr_docker

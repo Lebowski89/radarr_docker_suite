@@ -1,0 +1,187 @@
+---
+
+################################
+# CLEAN UP
+################################
+
+- name: Register container
+  community.docker.docker_container_info:
+    name: '{{ lookup("vars", role_prefix + "_4k" + "_basics_name") }}'
+  register: existing_radarr4k_container_result
+
+- name: Remove existing container
+  when: existing_radarr4k_container_result.exists
+  community.docker.docker_container:
+    container_default_behavior: compatibility
+    name: '{{ lookup("vars", role_prefix + "_4k" + "_basics_name") }}'
+    state: absent
+    stop_timeout: 10
+  register: remove_radarr4k_docker_container
+  retries: 5
+  delay: 10
+  until: remove_radarr4k_docker_container is succeeded
+
+################################
+# APPDATA
+################################
+
+- name: Create appdata directory
+  ansible.builtin.file:
+    path: '{{ lookup("vars", role_prefix + "_4k" + "_paths_location") }}'
+    state: directory
+    owner: '{{ lookup("vars", role_prefix + "_4k" + "_env_puid") }}'
+    group: '{{ lookup("vars", role_prefix + "_4k" + "_env_pgid") }}'
+    mode: '0755'
+
+################################
+# CONFIG
+################################
+
+- name: Check if config.xml exists
+  ansible.builtin.stat:
+    path: '{{ lookup("vars", role_prefix + "_4k" + "_paths_location") }}/config.xml'
+  register: config_radarr4k_xml
+
+- name: Create config.xml file
+  when: not config_radarr4k_xml.stat.exists
+  block:
+    - name: Import config file
+      ansible.builtin.template:
+        src: '{{ role_path }}/templates/radarr4k_config.xml.j2'
+        dest: '{{ lookup("vars", role_prefix + "_4k" + "_paths_location") }}/config.xml'
+        force: true
+        owner: '{{ lookup("vars", role_prefix + "_4k" + "_env_puid") }}'
+        group: '{{ lookup("vars", role_prefix + "_4k" + "_env_pgid") }}'
+        mode: '0664'
+
+    - name: Wait for 'config.xml' to be created
+      ansible.builtin.wait_for:
+        path: '{{ lookup("vars", role_prefix + "_4k" + "_paths_location") }}/config.xml'
+        state: present
+
+################################
+# CONFIG (API)
+################################
+
+    - name: Lookup Apikey value
+      when: (lookup("vars", role_prefix + "_4k" + "_api_key_is_enabled"))
+      community.general.xml:
+        path: '{{ lookup("vars", role_prefix + "_4k" + "_paths_location") }}/config.xml'
+        xpath: /Config/ApiKey
+        content: text
+      register: xml_radarr4k_api
+
+    - name: Insert existing api key
+      when:
+        - (lookup("vars", role_prefix + "_4k" + "_api_key_is_enabled"))
+        - (xml_radarr4k_api.matches[0].ApiKey is defined) and (xml_radarr4k_api.matches[0].ApiKey != lookup("vars", role_prefix + "_4k" + "_api_key"))
+      community.general.xml:
+        path: '{{ lookup("vars", role_prefix + "_4k" + "_paths_location") }}/config.xml'
+        xpath: /Config/ApiKey
+        value: '{{ lookup("vars", role_prefix + "_4k" + "_api_key") }}'
+
+################################
+# CONFIG (AUTHELIA)
+################################
+
+- name: Change config auth to external if Authelia present
+  when: (lookup("vars", role_prefix + "_toggles_enable_external_auth"))
+  block:
+    - name: Authelia builtin fail
+      when: not (lookup("vars", role_prefix + "_4k" + "_authelia_is_enabled"))
+      ansible.builtin.fail:
+        msg: Authelia is toggled on, but the Authelia container variable is empty.
+
+    - name: Lookup AuthenticationMethod value
+      community.general.xml:
+        path: '{{ lookup("vars", role_prefix + "_4k" + "_paths_location") }}/config.xml'
+        xpath: /Config/AuthenticationMethod
+        content: text
+      register: xml_radarr4k_external
+
+    - name: Register authelia container
+      community.docker.docker_container_info:
+        name: '{{ lookup("vars", role_prefix + "_4k" + "_authelia_container_name") }}'
+      register: authelia_radarr4k_container_result
+
+    - name: Change auth method to external
+      when:
+        - authelia_radarr4k_container_result.exists
+        - ((xml_radarr4k_external.matches[0].AuthenticationMethod is defined) and (xml_radarr4k_external.matches[0].AuthenticationMethod != 'External'))
+      community.general.xml:
+        path: '{{ lookup("vars", role_prefix + "_4k" + "_paths_location") }}/config.xml'
+        xpath: /Config/AuthenticationMethod
+        value: External
+
+################################
+# POSTGRES
+################################
+
+- name: Perform postgres tasks
+  when: (lookup("vars", role_prefix + "_toggles_enable_postgres"))
+  block:
+    - name: Include database tasks
+      ansible.builtin.include_tasks: radarr4k/postgres/database.yml
+
+    - name: Include config.xml tasks
+      ansible.builtin.include_tasks: radarr4k/postgres/config_xml.yml
+
+################################
+# CLOUDFLARE
+################################
+
+- name: Perform Cloudflare DNS tasks
+  when: (lookup("vars", role_prefix + "_toggles_enable_cloudflare_dns"))
+  block:
+    - name: Cloudflare builtin fail
+      when: not (lookup("vars", role_prefix + "_4k" + "_cloudflare_is_enabled"))
+      ansible.builtin.fail:
+        msg: Cloudflare DNS is toggled on, but the cloudflare API token variable is empty.
+
+    - name: Include cloudflare tasks
+      ansible.builtin.include_tasks: radarr4k/sub_tasks/cloudflare.yml
+
+################################
+# PROMETHEUS
+################################
+
+- name: Include exporter tasks
+  when: (lookup("vars", role_prefix + "_toggles_enable_metrics"))
+  ansible.builtin.include_tasks: radarr4k/sub_tasks/exporter.yml
+
+################################
+# CONTAINER
+################################
+
+- name: Create container
+  when: not (lookup("vars", role_prefix + "_toggles_enable_traefik"))
+  community.docker.docker_container:
+    name: '{{ lookup("vars", role_prefix + "_4k" + "_basics_name") }}'
+    image: '{{ lookup("vars", role_prefix + "_4k" + "_basics_image_repo") }}:{{ lookup("vars", role_prefix + "_4k" + "_basics_image_tag") }}'
+    networks: '{{ lookup("vars", role_prefix + "_4k" + "_networks") }}'
+    env: '{{ lookup("vars", role_prefix + "_4k" + "_envs") }}'
+    ports:
+      - '{{ lookup("vars", role_prefix + "_4k" + "_ports_host") }}:{{ lookup("vars", role_prefix + "_4k" + "_ports_cont") }}'
+    volumes: '{{ lookup("vars", role_prefix + "_4k" + "_volumes") }}'
+    restart_policy: '{{ lookup("vars", role_prefix + "_4k" + "_basics_restart_policy") }}'
+
+- name: Create traefik container
+  when: (lookup("vars", role_prefix + "_toggles_enable_traefik"))
+  community.docker.docker_container:
+    name: '{{ lookup("vars", role_prefix + "_4k" + "_basics_name") }}'
+    image: '{{ lookup("vars", role_prefix + "_4k" + "_basics_image_repo") }}:{{ lookup("vars", role_prefix + "_4k" + "_basics_image_tag") }}'
+    networks: '{{ lookup("vars", role_prefix + "_4k" + "_networks") }}'
+    env: '{{ lookup("vars", role_prefix + "_4k" + "_envs") }}'
+    labels: '{{ lookup("vars", role_prefix + "_4k" + "_labels") }}'
+    ports:
+      - '{{ lookup("vars", role_prefix + "_4k" + "_ports_host") }}:{{ lookup("vars", role_prefix + "_4k" + "_ports_cont") }}'
+    volumes: '{{ lookup("vars", role_prefix + "_4k" + "_volumes") }}'
+    restart_policy: '{{ lookup("vars", role_prefix + "_4k" + "_basics_restart_policy") }}'
+
+################################
+# RECYCLARR
+################################
+
+- name: Include recyclarr tasks
+  when: (lookup("vars", role_prefix + "_toggles_enable_recyclarr"))
+  ansible.builtin.include_tasks: radarr4k/sub_tasks/recyclarr.yml

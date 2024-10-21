@@ -1,0 +1,11 @@
+---
+
+################################
+# AUTHELIA
+################################
+
+  ## radarr
+radarr_authelia_container_name: 'authelia'
+
+  ## radarr4k
+radarr_4k_authelia_container_name: '{{ radarr_authelia_container_name }}'

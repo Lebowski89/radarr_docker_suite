@@ -1,8 +1,8 @@
 ---
 
-- name: Register radarr rclone volume
+- name: Register rclone volume
   community.docker.docker_volume_info:
-    name: '{{ radarr_rclone_volume_name }}'
+    name: '{{ lookup("vars", role_prefix + "_rclone_volume_name") }}'
   register: radarr_rclone_volume_initial_volume_result
 
 - name: Perform rclone docker volume creation tasks
@@ -17,8 +17,8 @@
       ansible.builtin.file:
         path: '{{ item }}'
         state: directory
-        owner: '{{ radarr_rclone_docker_plugin_env_puid }}'
-        group: '{{ radarr_rclone_docker_plugin_env_pgid }}'
+        owner: '{{ lookup("vars", role_prefix + "_rclone_docker_plugin_env_puid") }}'
+        group: '{{ lookup("vars", role_prefix + "_rclone_docker_plugin_env_pgid") }}'
         mode: '0755'
       loop:
         - /var/lib/docker-plugins/rclone/config
@@ -36,7 +36,7 @@
         state: disable
 
     - name: Apply rclone docker plugin global arguments
-      ansible.builtin.command: 'docker plugin set rclone RCLONE_VERBOSE=2 args={{ radarr_rclone_docker_plugin_global_args | quote }}'
+      ansible.builtin.command: 'docker plugin set rclone RCLONE_VERBOSE=2 args={{ lookup("vars", role_prefix + "_rclone_docker_plugin_global_args") | quote }}'
 
     - name: Enable docker volume rclone plugin
       community.docker.docker_plugin:
@@ -47,27 +47,27 @@
     - name: Check if rclone.conf exists
       ansible.builtin.stat:
         path: /var/lib/docker-plugins/rclone/config/rclone.conf
-      register: rclone_config_result
+      register: radarr_rclone_config_result
 
     - name: Create rclone.conf file
-      when: not rclone_config_result.stat.exists
+      when: not radarr_rclone_config_result.stat.exists
       ansible.builtin.file:
         path: /var/lib/docker-plugins/rclone/config/rclone.conf
         state: touch
-        owner: '{{ radarr_rclone_docker_plugin_env_puid }}'
-        group: '{{ radarr_rclone_docker_plugin_env_pgid }}'
+        owner: '{{ lookup("vars", role_prefix + "_rclone_docker_plugin_env_puid") }}'
+        group: '{{ lookup("vars", role_prefix + "_rclone_docker_plugin_env_pgid") }}'
         mode: '0644'
 
     - name: Create sftp rclone volume
       community.docker.docker_volume:
-        name: '{{ radarr_rclone_volume_name }}'
+        name: '{{ lookup("vars", role_prefix + "_rclone_volume_name") }}'
         driver: rclone
         driver_options:
-          type: '{{ radarr_rclone_volume_type }}'
-          path: '{{ radarr_rclone_volume_mount_path }}'
-          sftp-host: '{{ radarr_rclone_volume_host }}'
-          sftp-user: '{{ radarr_rclone_volume_user }}'
-          sftp-pass: '{{ radarr_rclone_volume_pass }}'
-          sftp-key-file-pass: '{{ radarr_rclone_volume_key_file_pass }}'
+          type: '{{ lookup("vars", role_prefix + "_rclone_volume_type") }}'
+          path: '{{ lookup("vars", role_prefix + "_rclone_volume_mount_path") }}'
+          sftp-host: '{{ lookup("vars", role_prefix + "_rclone_volume_host") }}'
+          sftp-user: '{{ lookup("vars", role_prefix + "_rclone_volume_user") }}'
+          sftp-pass: '{{ lookup("vars", role_prefix + "_rclone_volume_pass") }}'
+          sftp-key-file-pass: '{{ lookup("vars", role_prefix + "_rclone_volume_key_file_pass") }}'
           allow_other: 'true'
           vfs_cache_mode: 'off'

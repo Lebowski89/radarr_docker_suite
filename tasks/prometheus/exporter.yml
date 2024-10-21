@@ -1,33 +1,39 @@
 ---
 
-- name: Apply radarr-exporter prometheus scrape config
+- name: Apply exporter prometheus scrape config
   ansible.builtin.blockinfile:
-    path: '{{ radarr_prometheus_paths_location }}/prometheus.yml'
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - radarr-EXPORTER #"
+    path: '{{ lookup("vars", role_prefix + "_prometheus_paths_location") }}/prometheus.yml'
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ role_prefix }}-exporter #"
     block: |
       {% filter indent(width=2, first=true) %}
-      - job_name: '{{ radarr_prometheus_exporter_name }}'
+      - job_name: {{ lookup("vars", role_prefix + "_prometheus_exporter_basics_name") }}
         scrape_interval: 1m
         static_configs:
-          - targets: ['{{ radarr_prometheus_exporter_name }}:{{ radarr_prometheus_exporter_cont_port }}']
+          - targets: ['{{ lookup("vars", role_prefix + "_prometheus_exporter_basics_name") }}:{{ lookup("vars", role_prefix + "_prometheus_exporter_ports_cont") }}']
       {% endfilter %}
   notify:
     - restart prometheus
 
-- name: Create radarr prometheus exporter container
+- name: Register exporter container
+  community.docker.docker_container_info:
+    name: '{{ lookup("vars", role_prefix + "_prometheus_exporter_basics_name") }}'
+  register: radarr_prometheus_exporter_container_result
+
+- name: Create prometheus exporter container
+  when: not radarr_prometheus_exporter_container_result.exists
   community.docker.docker_container:
-    name: '{{ radarr_prometheus_exporter_name }}'
-    image: '{{ radarr_prometheus_exporter_image_repo }}:{{ radarr_prometheus_exporter_image_tag }}'
+    name: '{{ lookup("vars", role_prefix + "_prometheus_exporter_basics_name") }}'
+    image: '{{ lookup("vars", role_prefix + "_prometheus_exporter_basics_image_repo") }}:{{ lookup("vars", role_prefix + "_prometheus_exporter_basics_image_tag") }}'
     command: ["radarr"]
-    networks: '{{ radarr_prometheus_exporter_networks }}'
+    networks: '{{ lookup("vars", role_prefix + "_prometheus_exporter_networks") }}'
     env:
-      PUID: '{{ radarr_prometheus_exporter_env_puid }}'
-      PGID: '{{ radarr_prometheus_exporter_env_pgid }}'
-      TZ: '{{ radarr_prometheus_exporter_env_timezone }}'
-      PORT: '{{ radarr_prometheus_exporter_cont_port }}'
-      URL: 'http://{{ radarr_basics_name }}:{{ radarr_ports_cont }}'
-      API_KEY: '{{ radarr_api_key }}'
+      PUID: '{{ lookup("vars", role_prefix + "_prometheus_exporter_env_puid") }}'
+      PGID: '{{ lookup("vars", role_prefix + "_prometheus_exporter_env_pgid") }}'
+      TZ: '{{ lookup("vars", role_prefix + "_prometheus_exporter_env_timezone") }}'
+      PORT: '{{ lookup("vars", role_prefix + "_prometheus_exporter_ports_cont") }}'
+      URL: 'http://{{ lookup("vars", role_prefix + "_basics_name") }}:{{ lookup("vars", role_prefix + "_ports_cont") }}'
+      API_KEY: '{{ lookup("vars", role_prefix + "_api_key") }}'
       ENABLE_ADDITIONAL_METRICS: 'true'
     ports:
-      - '{{ radarr_prometheus_exporter_host_port }}:{{ radarr_prometheus_exporter_cont_port }}'
-    restart_policy: '{{ radarr_prometheus_exporter_restart_policy }}'
+      - '{{ lookup("vars", role_prefix + "_prometheus_exporter_ports_host") }}:{{ lookup("vars", role_prefix + "_prometheus_exporter_ports_cont") }}'
+    restart_policy: '{{ lookup("vars", role_prefix + "_prometheus_exporter_basics_restart_policy") }}'

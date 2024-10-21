@@ -25,7 +25,12 @@ radarr_rclone_volume_key_file_pass: ''
 # BINDS
 ################################
 
+  ## radarr
 radarr_rclone_volume_bind:
+  - '{{ radarr_rclone_volume_name }}:{{ radarr_rclone_volume_mount_path }}'
+
+  ## radarr4k
+radarr_4k_rclone_volume_bind:
   - '{{ radarr_rclone_volume_name }}:{{ radarr_rclone_volume_mount_path }}'
 
 ################################

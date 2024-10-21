@@ -39,8 +39,7 @@ radarr_postgres_ports_cont: '5432'
 
 radarr_postgres_paths_folder: '{{ radarr_postgres_basics_name }}'  # name of postgres folder
 radarr_postgres_paths_location: '/opt/{{ radarr_postgres_paths_folder }}' # path of postgres folder
-radarr_postgres_paths_keys_folder: 'keys'
-radarr_postgres_paths_keys_location: '{{ radarr_postgres_paths_location }}/{{ radarr_postgres_paths_keys_folder }}'
+radarr_postgres_paths_keys_location: '{{ radarr_postgres_paths_location }}/keys'
 
 ################################
 # BINDS
@@ -64,5 +63,14 @@ radarr_postgres_auth_password_file: 'postgres_key.txt'  ## will be created by ro
 # DATABASE
 ################################
 
+  ## radarr
 radarr_postgres_database_main: 'radarr-main'
 radarr_postgres_database_log: 'radarr-log'
+
+  ## radarr4k
+radarr_4k_postgres_database_main: 'radarr4k-main'
+radarr_4k_postgres_database_log: 'radarr4k-log'
+
+
+
+
