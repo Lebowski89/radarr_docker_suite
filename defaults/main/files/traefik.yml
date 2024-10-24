@@ -44,7 +44,7 @@ radarr_traefik_http_rule: 'Host(`{{ radarr_traefik_subdomain }}.{{ radarr_traefi
 radarr_traefik_http_priority: '20'
 
 radarr_traefik_http_api_middlewares: 'globalHeaders@file,redirect-to-https@docker,autodetect@docker,gzip@docker,robotHeaders@file'
-radarr_traefik_http_api_rule: '{{ radarr_traefik_http_rule }} && (PathPrefix(`/api`) || PathPrefix(`/feed`) || PathPrefix(`/ping`))'
+radarr_traefik_http_api_rule: '{{ radarr_traefik_http_rule + " && (PathPrefix(`/api`) || PathPrefix(`/feed`) || PathPrefix(`/ping`))" }}'
 radarr_traefik_http_api_priority: '30'
 
   ## radarr4k
@@ -53,7 +53,7 @@ radarr_4k_traefik_http_rule: 'Host(`{{ radarr_4k_traefik_subdomain }}.{{ radarr_
 radarr_4k_traefik_http_priority: '{{ radarr_traefik_http_priority }}'
 
 radarr_4k_traefik_http_api_middlewares: '{{ radarr_traefik_http_api_middlewares }}'
-radarr_4k_traefik_http_api_rule: '{{ radarr_4k_traefik_http_rule }} && (PathPrefix(`/api`) || PathPrefix(`/feed`) || PathPrefix(`/ping`))'
+radarr_4k_traefik_http_api_rule: '{{ radarr_4k_traefik_http_rule + " && (PathPrefix(`/api`) || PathPrefix(`/feed`) || PathPrefix(`/ping`))" }}'
 radarr_4k_traefik_http_api_priority: '{{ radarr_traefik_http_api_priority }}'
 
   ## prometheus
@@ -71,7 +71,7 @@ radarr_traefik_https_rule: 'Host(`{{ radarr_traefik_subdomain }}.{{ radarr_traef
 radarr_traefik_https_priority: '20'
 
 radarr_traefik_https_api_middlewares: 'globalHeaders@file,secureHeaders@file,autodetect@docker,gzip@docker,robotHeaders@file,hsts@file'
-radarr_traefik_https_api_rule: '{{ radarr_traefik_https_rule }} && (PathPrefix(`/api`) || PathPrefix(`/feed`) || PathPrefix(`/ping`))'
+radarr_traefik_https_api_rule: '{{ radarr_traefik_https_rule + " && (PathPrefix(`/api`) || PathPrefix(`/feed`) || PathPrefix(`/ping`))" }}'
 radarr_traefik_https_api_priority: '30'
 
   ## radarr4k
@@ -80,7 +80,7 @@ radarr_4k_traefik_https_rule: 'Host(`{{ radarr_4k_traefik_subdomain }}.{{ radarr
 radarr_4k_traefik_https_priority: '{{ radarr_traefik_https_priority }}'
 
 radarr_4k_traefik_https_api_middlewares: '{{ radarr_traefik_https_api_middlewares }}'
-radarr_4k_traefik_https_api_rule: '{{ radarr_4k_traefik_https_rule }} && (PathPrefix(`/api`) || PathPrefix(`/feed`) || PathPrefix(`/ping`))'
+radarr_4k_traefik_https_api_rule: '{{ radarr_4k_traefik_https_rule + " && (PathPrefix(`/api`) || PathPrefix(`/feed`) || PathPrefix(`/ping`))" }}'
 radarr_4k_traefik_https_api_priority: '{{ radarr_traefik_https_api_priority }}'
 
   ## prometheus
