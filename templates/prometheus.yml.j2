@@ -6,4 +6,4 @@ scrape_configs:
   - job_name: 'prometheus'
     scrape_interval: 5s
     static_configs:
-      - targets: ['{{ lookup("vars", role_prefix + "_prometheus_basics_name") }}:{{ lookup("vars", role_prefix + "_prometheus_ports_cont") }}']
+      - targets: ['{{ lookup("vars", radarr_prefix + "_prometheus_basics_name") }}:{{ lookup("vars", radarr_prefix + "_prometheus_ports_cont") }}']

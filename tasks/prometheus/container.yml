@@ -2,93 +2,93 @@
 
 - name: Create prometheus appdata directory
   ansible.builtin.file:
-    path: '{{ lookup("vars", role_prefix + "_prometheus_paths_location") }}'
+    path: '{{ lookup("vars", radarr_prefix + "_prometheus_paths_location") }}'
     state: directory
-    owner: '{{ lookup("vars", role_prefix + "_prometheus_env_puid") }}'
-    group: '{{ lookup("vars", role_prefix + "_prometheus_env_pgid") }}'
+    owner: '{{ lookup("vars", radarr_prefix + "_prometheus_env_puid") }}'
+    group: '{{ lookup("vars", radarr_prefix + "_prometheus_env_pgid") }}'
     mode: '0755'
 
 - name: Create prometheus metrics data directory
   ansible.builtin.file:
-    path: '{{ lookup("vars", role_prefix + "_prometheus_paths_data_location") }}'
+    path: '{{ lookup("vars", radarr_prefix + "_prometheus_paths_data_location") }}'
     state: directory
-    owner: '{{ lookup("vars", role_prefix + "_prometheus_env_puid") }}'
-    group: '{{ lookup("vars", role_prefix + "_prometheus_env_pgid") }}'
+    owner: '{{ lookup("vars", radarr_prefix + "_prometheus_env_puid") }}'
+    group: '{{ lookup("vars", radarr_prefix + "_prometheus_env_pgid") }}'
     mode: '0755'
 
 - name: Check if prometheus scrape config exists
   ansible.builtin.stat:
-    path: '{{ lookup("vars", role_prefix + "_prometheus_paths_location") }}/prometheus.yml'
+    path: '{{ lookup("vars", radarr_prefix + "_prometheus_paths_location") }}/prometheus.yml'
   register: radarr_prometheus_scrape_config
 
 - name: Import prometheus scrape file
   when: not radarr_prometheus_scrape_config.stat.exists
   ansible.builtin.template:
     src: '{{ role_path }}/templates/prometheus.yml.j2'
-    dest: '{{ lookup("vars", role_prefix + "_prometheus_paths_location") }}/prometheus.yml'
+    dest: '{{ lookup("vars", radarr_prefix + "_prometheus_paths_location") }}/prometheus.yml'
     force: true
-    owner: '{{ lookup("vars", role_prefix + "_prometheus_env_puid") }}'
-    group: '{{ lookup("vars", role_prefix + "_prometheus_env_pgid") }}'
+    owner: '{{ lookup("vars", radarr_prefix + "_prometheus_env_puid") }}'
+    group: '{{ lookup("vars", radarr_prefix + "_prometheus_env_pgid") }}'
     mode: '0664'
   notify:
     - restart prometheus
 
 - name: Register prometheus network
   community.docker.docker_network_info:
-    name: '{{ lookup("vars", role_prefix + "_prometheus_network") }}'
+    name: '{{ lookup("vars", radarr_prefix + "_prometheus_network") }}'
   register: radarr_prometheus_network_result
 
 - name: Prometheus network builtin fail
   ansible.builtin.fail:
     msg: Prometheus network does not exist nor is it enabled. Ensure the Prometheus network variables contain valid entries.
   when:
-    - not (lookup("vars", role_prefix + "_prometheus_network_is_enabled"))
+    - not (lookup("vars", radarr_prefix + "_prometheus_network_is_enabled"))
     - not radarr_prometheus_network_result.exists
 
 - name: Create prometheus network
   when: not radarr_prometheus_network_result.exists
   community.docker.docker_network:
-    name: '{{ lookup("vars", role_prefix + "_prometheus_network") }}'
-    driver: '{{ lookup("vars", role_prefix + "_prometheus_network_driver") }}'
+    name: '{{ lookup("vars", radarr_prefix + "_prometheus_network") }}'
+    driver: '{{ lookup("vars", radarr_prefix + "_prometheus_network_driver") }}'
     ipam_config:
-      - subnet: '{{ lookup("vars", role_prefix + "_prometheus_network_subnet") }}'
+      - subnet: '{{ lookup("vars", radarr_prefix + "_prometheus_network_subnet") }}'
 
 - name: Register prometheus container
   community.docker.docker_container_info:
-    name: '{{ lookup("vars", role_prefix + "_prometheus_basics_name") }}'
+    name: '{{ lookup("vars", radarr_prefix + "_prometheus_basics_name") }}'
   register: radarr_prometheus_container_result
 
 - name: Create prometheus container
   when:
     - not radarr_prometheus_container_result.exists
-    - not (lookup("vars", role_prefix + "_toggles_enable_traefik"))
+    - not (lookup("vars", radarr_prefix + "_toggles_enable_traefik"))
   community.docker.docker_container:
-    name: '{{ lookup("vars", role_prefix + "_prometheus_basics_name") }}'
-    image: '{{ lookup("vars", role_prefix + "_prometheus_basics_image_repo") }}:{{ lookup("vars", role_prefix + "_prometheus_basics_image_tag") }}'
-    networks: '{{ lookup("vars", role_prefix + "_prometheus_networks") }}'
-    command: '{{ lookup("vars", role_prefix + "_prometheus_commands") | reject("equalto", omit) | list }}'
+    name: '{{ lookup("vars", radarr_prefix + "_prometheus_basics_name") }}'
+    image: '{{ lookup("vars", radarr_prefix + "_prometheus_basics_image_repo") }}:{{ lookup("vars", radarr_prefix + "_prometheus_basics_image_tag") }}'
+    networks: '{{ lookup("vars", radarr_prefix + "_prometheus_networks") }}'
+    command: '{{ lookup("vars", radarr_prefix + "_prometheus_commands") | reject("equalto", omit) | list }}'
     env:
-      TZ: '{{ lookup("vars", role_prefix + "_prometheus_env_timezone") }}'
+      TZ: '{{ lookup("vars", radarr_prefix + "_prometheus_env_timezone") }}'
     ports:
-      - '{{ lookup("vars", role_prefix + "_prometheus_ports_host") }}:{{ lookup("vars", role_prefix + "_prometheus_ports_cont") }}'
-    user: '{{ lookup("vars", role_prefix + "_prometheus_env_puid") }}:{{ lookup("vars", role_prefix + "_prometheus_env_pgid") }}'
-    volumes: '{{ lookup("vars", role_prefix + "_prometheus_volumes_binds") }}'
-    restart_policy: '{{ lookup("vars", role_prefix + "_prometheus_basics_restart_policy") }}'
+      - '{{ lookup("vars", radarr_prefix + "_prometheus_ports_host") }}:{{ lookup("vars", radarr_prefix + "_prometheus_ports_cont") }}'
+    user: '{{ lookup("vars", radarr_prefix + "_prometheus_env_puid") }}:{{ lookup("vars", radarr_prefix + "_prometheus_env_pgid") }}'
+    volumes: '{{ lookup("vars", radarr_prefix + "_prometheus_volumes_binds") }}'
+    restart_policy: '{{ lookup("vars", radarr_prefix + "_prometheus_basics_restart_policy") }}'
 
 - name: Create prometheus traefik container
   when:
     - not radarr_prometheus_container_result.exists
-    - (lookup("vars", role_prefix + "_toggles_enable_traefik"))
+    - (lookup("vars", radarr_prefix + "_toggles_enable_traefik"))
   community.docker.docker_container:
-    name: '{{ lookup("vars", role_prefix + "_prometheus_basics_name") }}'
-    image: '{{ lookup("vars", role_prefix + "_prometheus_basics_image_repo") }}:{{ lookup("vars", role_prefix + "_prometheus_basics_image_tag") }}'
-    networks: '{{ lookup("vars", role_prefix + "_prometheus_networks") }}'
-    command: '{{ lookup("vars", role_prefix + "_prometheus_commands") | reject("equalto", omit) | list }}'
+    name: '{{ lookup("vars", radarr_prefix + "_prometheus_basics_name") }}'
+    image: '{{ lookup("vars", radarr_prefix + "_prometheus_basics_image_repo") }}:{{ lookup("vars", radarr_prefix + "_prometheus_basics_image_tag") }}'
+    networks: '{{ lookup("vars", radarr_prefix + "_prometheus_networks") }}'
+    command: '{{ lookup("vars", radarr_prefix + "_prometheus_commands") | reject("equalto", omit) | list }}'
     env:
-      TZ: '{{ lookup("vars", role_prefix + "_prometheus_env_timezone") }}'
-    labels: '{{ lookup("vars", role_prefix + "_prometheus_labels") }}'
+      TZ: '{{ lookup("vars", radarr_prefix + "_prometheus_env_timezone") }}'
+    labels: '{{ lookup("vars", radarr_prefix + "_prometheus_labels") }}'
     ports:
-      - '{{ lookup("vars", role_prefix + "_prometheus_ports_host") }}:{{ lookup("vars", role_prefix + "_prometheus_ports_cont") }}'
-    user: '{{ lookup("vars", role_prefix + "_prometheus_env_puid") }}:{{ lookup("vars", role_prefix + "_prometheus_env_pgid") }}'
-    volumes: '{{ lookup("vars", role_prefix + "_prometheus_volumes_binds") }}'
-    restart_policy: '{{ lookup("vars", role_prefix + "_prometheus_basics_restart_policy") }}'
+      - '{{ lookup("vars", radarr_prefix + "_prometheus_ports_host") }}:{{ lookup("vars", radarr_prefix + "_prometheus_ports_cont") }}'
+    user: '{{ lookup("vars", radarr_prefix + "_prometheus_env_puid") }}:{{ lookup("vars", radarr_prefix + "_prometheus_env_pgid") }}'
+    volumes: '{{ lookup("vars", radarr_prefix + "_prometheus_volumes_binds") }}'
+    restart_policy: '{{ lookup("vars", radarr_prefix + "_prometheus_basics_restart_policy") }}'

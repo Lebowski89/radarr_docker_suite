@@ -2,24 +2,24 @@
 
 - name: Insert radarr4k's recyclarr secrets settings
   ansible.builtin.blockinfile:
-    path: '{{ lookup("vars", role_prefix + "_recyclarr_paths_location") }}/secrets.yml'
+    path: '{{ lookup("vars", radarr_prefix + "_recyclarr_paths_location") }}/secrets.yml'
     marker: "## {mark} ANSIBLE RADARR4K MANAGED BLOCK ##"
-    owner: '{{ lookup("vars", role_prefix + "_recyclarr_env_puid") }}'
-    group: '{{ lookup("vars", role_prefix + "_recyclarr_env_pgid") }}'
+    owner: '{{ lookup("vars", radarr_prefix + "_recyclarr_env_puid") }}'
+    group: '{{ lookup("vars", radarr_prefix + "_recyclarr_env_pgid") }}'
     mode: '0664'
     create: true
     block: |
-      radarr4k_base_url: http://{{ lookup("vars", role_prefix + "_4k" + "_basics_name") }}:{{ lookup("vars", role_prefix + "_4k" + "_ports_cont") }}
-      radarr4k_api_key: {{ lookup("vars", role_prefix + "_4k" + "_api_key") }}
+      radarr4k_base_url: http://{{ lookup("vars", radarr_prefix + "_4k" + "_basics_name") }}:{{ lookup("vars", radarr_prefix + "_4k" + "_ports_cont") }}
+      radarr4k_api_key: {{ lookup("vars", radarr_prefix + "_4k" + "_api_key") }}
   notify:
     - restart recyclarr
 
 - name: Insert radarr4k's recyclarr config settings
   ansible.builtin.blockinfile:  ## these are settings I use. Yours may differ. See: https://recyclarr.dev/wiki/
-    path: '{{ lookup("vars", role_prefix + "_recyclarr_paths_location") }}/configs/radarr4k.yml'
+    path: '{{ lookup("vars", radarr_prefix + "_recyclarr_paths_location") }}/configs/radarr4k.yml'
     marker: "## {mark} ANSIBLE RADARR4K MANAGED BLOCK ##"
-    owner: '{{ lookup("vars", role_prefix + "_recyclarr_env_puid") }}'
-    group: '{{ lookup("vars", role_prefix + "_recyclarr_env_pgid") }}'
+    owner: '{{ lookup("vars", radarr_prefix + "_recyclarr_env_puid") }}'
+    group: '{{ lookup("vars", radarr_prefix + "_recyclarr_env_pgid") }}'
     mode: '0664'
     create: true
     block: |
