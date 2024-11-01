@@ -85,7 +85,6 @@ radarr_prometheus_binds_config_mapping:
 radarr_prometheus_binds_data_mapping:
   - '{{ radarr_prometheus_paths_data_location }}:/data'
 
-
 ################################
 # METRICS
 ################################
